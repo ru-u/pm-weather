@@ -8,7 +8,8 @@ market properly, replicate settlement exactly, pre-register the test, and
 compare the market's prices against free public forecasts before building any
 model.
 
-Status (2026-11-14): infrastructure and reconnaissance. No model, no trading.
+Status (2026-11-14): market logger live, settlement checks under way, first
+experiment pre-registered. No model, no trading.
 
 ## Why these markets
 
@@ -95,8 +96,8 @@ make settle-check SERIES=KXNYCSNOWM
 | Phase | Question | Status |
 | - | - | - |
 | 0 | Scaffold, environment, conventions | done |
-| 1 | Live market logging | built and run locally; deployment next |
-| 2 | Do snow prices beat NBM guidance? | plan and pre-registration drafted |
+| 1 | Live market logging | running since 2026-11-14 |
+| 2 | Do snow prices beat NBM guidance? | pre-registered, not yet run |
 | 3 | Do ERCOT demand prices beat ERCOT's own forecast? | not started |
 | 4 | Distributional snowfall and load models | only if a gate passes |
 | 5 | Paper trading, then small live with hard limits | only on explicit approval |

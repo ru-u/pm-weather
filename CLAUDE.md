@@ -134,9 +134,9 @@ data/         gitignored: raw/ interim/ processed/ live/
 ## Phases and gates
 
 0. Scaffold and environment. Done 2026-11-14.
-1. Live logger. Kalshi book, market and trade logging built and run locally;
-   Railway deployment, NBM forecast snapshots, ERCOT forecast snapshots and
-   Polymarket (read-only) logging still to do.
+1. Live logger. Kalshi book, market and trade logging is deployed on Railway
+   and running since 2026-11-14 16:12 UTC. NBM forecast snapshots, ERCOT
+   forecast snapshots and Polymarket (read-only) logging still to do.
 2. Historical snow go/no-go: do Kalshi snow prices beat, match or lose to free
    NBM guidance at matched timestamps? Plan in `docs/phase2_plan.md`, rule in
    `docs/preregistration.md` (frozen 2026-11-14; changes are logged deviations).
@@ -152,7 +152,12 @@ One combined risk layer caps total cold-weather exposure across both.
 
 ## Hosting
 
-Railway, Hobby plan, a separate project for this repo, US East. The $5 monthly
-credit is shared with the owner's other services (Zenith, a Polymarket logger):
-never touch those, and keep this project lean. Storage is a Railway bucket, not
-a volume. Heavy jobs run on the laptop. Details in `docs/deploy.md`.
+Railway, Hobby plan, project `pm-weather`, US East: service `logger` (always
+on), cron service `daily-report`, bucket `pmw-data`. The $5 monthly credit is
+shared with the owner's other projects (Zenith, uscom-logger): never touch
+those, and keep this project lean. Total account overage is acceptable up to
+about $10 a month. Deploy with `railway up --service logger` from this folder;
+there is no Railway config file in the repo (see D-023). A redeploy restarts
+the logger and costs at most one 5-minute cycle of order books, so avoid
+redeploying during an active storm unless it fixes a logging bug. Heavy jobs
+run on the laptop. Details in `docs/deploy.md`.

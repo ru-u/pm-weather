@@ -140,3 +140,33 @@ design analysis that used quotes and volumes only
 (`docs/findings/2026-11-14-prereg-design.md`). Added: sensitivity checks at
 spreads 0.10 and 0.30, a monthly-only scope for any GO, and a prospective
 storm-window experiment on live-logged data.
+
+**D-022. Deployed to Railway on 2026-11-14 (owner said "deploy").** New project
+`pm-weather` in the owner's workspace, separate from Zenith and uscom-logger,
+which were not touched. Bucket `pmw-data` in US East (`iad`), always-on service
+`logger` and cron service `daily-report` (00:15 UTC), both in US East
+(`us-east4`). Neither service has any `KALSHI_*` or `ERCOT_*` variable. Account
+usage before this project was $3.96 for the billing period (Zenith $2.41,
+uscom-logger $1.55), so the expected total stays under the $10 cap in D-018.
+
+**D-023. No Railway config file in the repo.** Railway deprecated
+`railway.toml` (it stops being read on 2026-12-01) in favour of
+`.railway/railway.ts`, which needs a Node package installed to plan or apply.
+For two small services that is not worth a second toolchain. `railway.toml` was
+removed. The Dockerfile is auto-detected, and the remaining settings (start
+command, restart policy, cron schedule, region) are stored on the Railway
+services and listed with the exact commands in `docs/deploy.md`. Note for
+later: `railway environment edit --service-config` reported "No changes to
+apply" for these settings, so they were set through the GraphQL API
+(`serviceInstanceUpdate`) instead.
+
+**D-024. Builds are pinned to the Dockerfile with `RAILWAY_DOCKERFILE_PATH`, and
+deploys use `railway up`.** `railway redeploy` twice rebuilt the logger with
+Railpack and failed (harmlessly: the running deployment was untouched). The
+latest logger deployment is a successful `railway up` build. See
+`docs/deploy.md`.
+
+**D-025. The first daily report will raise one expected alert.** Logging began
+at 16:15 UTC on 2026-11-14, so the report for that date has about 93 of 288 base
+cycles and trips the "under 95% of a full day" check. Reports from 2026-11-15
+onward should be clean; a gap or shortfall after that date is real.
