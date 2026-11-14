@@ -7,10 +7,16 @@ logged at the bottom with a date and a reason.
 
 ## Experiment P2A: Kalshi snow market versus NBM guidance
 
-**Status: DRAFT, 2026-11-14. Not yet approved by the owner. Not yet run.**
-No price-versus-forecast comparison has been computed. What has been looked at:
-settlement outcomes of settled markets, total volumes per series, and one NBM
-bulletin to learn its format.
+**Status: FROZEN 2026-11-14. Not yet run.** The owner delegated the three open
+design choices to analysis ("do the research and figure out the optimal"); they
+are resolved below and in `docs/findings/2026-11-14-prereg-design.md`. From here
+on, any change is a deviation and is logged at the bottom.
+
+What has been looked at before freezing: settlement outcomes of settled markets;
+total volumes per series; one NBM bulletin, to learn its format; and hourly bid,
+ask and volume candles of settled snow markets, used only for spread, coverage
+and block-structure statistics. No forecast has been joined to a price and no
+price has been scored against an outcome.
 
 ### Question
 
@@ -86,14 +92,30 @@ drawn from P2A in either direction.
   labelled exploratory.
 - Results are written to `docs/findings/` whatever they show.
 
-### Open choices for the owner before approval
+### Design choices, resolved 2026-11-14
 
-1. Spread filter of 0.20 for a usable quote: tighter loses observations, looser
-   admits stale quotes.
-2. Whether storm-window and monthly markets should be pooled for the primary
-   metric (as drafted) or storm-window alone should be primary. Storm windows
-   are the cleaner NBM test and carried most of the volume, but there are only six.
-3. GO threshold of 90% for simulated P&L.
+1. **Usable quote:** two-sided, spread at most 0.20. Registered sensitivity
+   checks at 0.10 and 0.30: if the sign of D differs between them, the outcome
+   is CONDITIONAL regardless of the primary result.
+2. **Pooling:** storm-window and monthly markets are pooled, observation-weighted,
+   for the primary metric. The storm-window stratum is reported as point
+   estimates only (six events in four calendar weeks support no inference). A GO
+   licenses Phase 4 work on monthly markets only.
+3. **P&L threshold for GO:** positive in at least 90% of bootstrap resamples.
+
+Known property of the test, measured by simulation on the real block structure:
+about 20 effective weekly blocks; the 95% interval signals falsely about 7% of
+the time two-sided; a GO fires about 1% of the time with no edge, about 11% of
+the time when NBM is more accurate but fees consume the edge, and about 54% and
+83% of the time for real edges with expected t-statistics of 2 and 3.
+
+### Prospective extension: storm-window markets (P2A-S)
+
+History cannot answer the storm-window question, and storm windows carried 42%
+of contracts traded. The same comparison, with the same rule, is run on storm-
+window markets logged live from 2026-11 onward, once at least 12 storm events in
+at least 8 distinct calendar weeks have settled. Market quotes come from the
+logger's order books instead of hourly candles. Nothing is scored before then.
 
 ---
 

@@ -104,6 +104,8 @@ data/         gitignored: raw/ interim/ processed/ live/
 - Taker fee = 0.07 x multiplier x contracts x P x (1 - P), rounded up to
   $0.000001, then a rounding fee floors the balance change to $0.0001. All
   weather and energy series we track are `quadratic`, multiplier 1, no maker fee.
+- The owner's Kalshi key is Ed25519 (PKCS#8 body stored without PEM header
+  lines). Ed25519 signs the pre-sign text directly; RSA-PSS applies to RSA keys only.
 - The fee-schedule PDF itself could not be fetched (kalshi.com rate-limits
   automated requests). The 0.07 was confirmed from the API docs' worked example.
   Reconcile against the first real fill.
@@ -137,7 +139,9 @@ data/         gitignored: raw/ interim/ processed/ live/
    Polymarket (read-only) logging still to do.
 2. Historical snow go/no-go: do Kalshi snow prices beat, match or lose to free
    NBM guidance at matched timestamps? Plan in `docs/phase2_plan.md`, rule in
-   `docs/preregistration.md` (draft, awaiting owner sign-off).
+   `docs/preregistration.md` (frozen 2026-11-14; changes are logged deviations).
+   History can only test monthly markets. Storm-window markets (42% of last
+   winter's volume, six events) are tested prospectively on live-logged data.
 3. ERCOT go/no-go (needs volume of about $20k/day on stressed days as well).
 4. Modeling, only if a gate passes.
 5. Paper trading, then tiny live with hard caps and a kill switch, only on

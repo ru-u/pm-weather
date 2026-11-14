@@ -116,3 +116,27 @@ recovered later, which is why they came first.
 **D-017. Initial commit made on `main`, local only.** Nothing has been pushed
 and no remote is configured. Before the first push, decide whether the GitHub
 repo is private (recommended until Phase 2 is written up).
+
+**D-018. Budget: overage on the shared Railway account is acceptable up to about
+$10 a month in total** (owner, 2026-11-14). This project's estimate is $2.20 to
+$2.50 a month, so the cap is only at risk if the other services already use
+more than about $7.50.
+
+**D-019. Correction: the Kalshi private key in the key file is valid.** The
+first-session note called it incomplete because it is one 64-character line. It
+decodes to a 48-byte PKCS#8 Ed25519 private key, which is the key type Kalshi
+now generates by default (API docs, "API Keys"). It is stored without the
+`-----BEGIN PRIVATE KEY-----` / `-----END PRIVATE KEY-----` lines; the future
+trading service adds them when loading. Signing with an Ed25519 key signs the
+pre-sign text directly (no RSA-PSS). Nothing in the logger reads this key.
+
+**D-020. `.env` re-synced after the owner corrected the ERCOT username in
+`keys.txt`.** `keys.txt` and `.env` now hold the same values. Keep one of them:
+edits made to only one file will drift again.
+
+**D-021. Pre-registration P2A frozen.** The three open choices (spread filter
+0.20, pooled primary metric, 90% P&L threshold) were kept as drafted after a
+design analysis that used quotes and volumes only
+(`docs/findings/2026-11-14-prereg-design.md`). Added: sensitivity checks at
+spreads 0.10 and 0.30, a monthly-only scope for any GO, and a prospective
+storm-window experiment on live-logged data.

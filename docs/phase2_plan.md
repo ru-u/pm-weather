@@ -1,8 +1,8 @@
 # Phase 2 plan: do Kalshi snow prices beat free NBM guidance?
 
-Status: **proposal for owner review. Nothing in this plan has been run.**
-The decision rule is in `docs/preregistration.md` (draft). Both need sign-off
-before step 4 touches any price-versus-forecast comparison.
+Status: **plan accepted, pre-registration frozen 2026-11-14. Steps 1 to 6 not
+yet run** (the hourly candles for step 1 are already cached by
+`scripts/prereg_design.py`). The decision rule is in `docs/preregistration.md`.
 
 ## The question
 
