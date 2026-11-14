@@ -1,0 +1,151 @@
+# Settlement station per market series. Never assume the airport: every entry
+# says how it was confirmed.
+#
+# `verified: rules-2025-26` means the station comes from the rule text of that
+# series' settled 2025-26 markets, which named the NWS CLI product (e.g. CLINYC)
+# and the "Observed Weather" location. This season's rule text points to The
+# Weather Company's dashboard and no longer names the CLI product, so each
+# mapping must be re-confirmed on https://weather.com/kalshi (see D-004).
+#
+# std_utc_offset_hours is the STANDARD-time offset. NWS climate days use local
+# standard time all year. Coordinates are the ASOS site, approximate to ~100 m;
+# confirm against IEM station metadata before any grid-point extraction.
+stations:
+  KNYC:
+    name: New York City, Central Park
+    icao: KNYC
+    cli_id: KNYC
+    cli_product: CLINYC
+    wfo: OKX
+    lat: 40.7789
+    lon: -73.9692
+    tz: America/New_York
+    std_utc_offset_hours: -5
+    series: [KXNYCSNOWM, KXSNOWNYM, SNOWNYM, KXNYCSNOWXMAS]
+    verified: rules-2025-26
+  KBOS:
+    name: Boston, Logan Airport
+    icao: KBOS
+    cli_id: KBOS
+    cli_product: CLIBOS
+    wfo: BOX
+    lat: 42.3606
+    lon: -71.0097
+    tz: America/New_York
+    std_utc_offset_hours: -5
+    series: [KXBOSSNOWM, KXSNOWXMASBOS]
+    verified: rules-2025-26
+  KDCA:
+    name: Washington DC, Reagan National
+    icao: KDCA
+    cli_id: KDCA
+    cli_product: CLIDCA
+    wfo: LWX
+    lat: 38.8483
+    lon: -77.0342
+    tz: America/New_York
+    std_utc_offset_hours: -5
+    series: [KXDCSNOWM, KXSNOWXMASDC]
+    verified: rules-2025-26
+  KPHL:
+    name: Philadelphia International
+    icao: KPHL
+    cli_id: KPHL
+    cli_product: CLIPHL
+    wfo: PHI
+    lat: 39.8733
+    lon: -75.2268
+    tz: America/New_York
+    std_utc_offset_hours: -5
+    series: [KXPHILSNOWM, KXSNOWXMASPHIL]
+    verified: rules-2025-26
+  KORD:
+    name: Chicago O'Hare
+    icao: KORD
+    cli_id: KORD
+    cli_product: CLIORD
+    wfo: LOT
+    lat: 41.9602
+    lon: -87.9316
+    tz: America/Chicago
+    std_utc_offset_hours: -6
+    series: [KXCHISNOWM, KXSNOWXMASCHI]
+    # 29 of 35 settled markets cite CLIORD; 6 cite CLIMDW (Midway) and 5 settled
+    # "scalar" rather than yes/no. Treat Chicago as unresolved until explained.
+    verified: rules-2025-26 (with Midway anomaly)
+  KDTW:
+    name: Detroit Metro
+    icao: KDTW
+    cli_id: KDTW
+    cli_product: CLIDTW
+    wfo: DTX
+    lat: 42.2313
+    lon: -83.3308
+    tz: America/Detroit
+    std_utc_offset_hours: -5
+    series: [KXDETSNOWM, KXSNOWXMASDET]
+    verified: rules-2025-26
+  KSEA:
+    name: Seattle-Tacoma
+    icao: KSEA
+    cli_id: KSEA
+    cli_product: CLISEA
+    wfo: SEW
+    lat: 47.4447
+    lon: -122.3144
+    tz: America/Los_Angeles
+    std_utc_offset_hours: -8
+    series: [KXSEASNOWM, KXSNOWXMASSEA]
+    verified: rules-2025-26
+  KSLC:
+    name: Salt Lake City
+    icao: KSLC
+    cli_id: KSLC
+    cli_product: CLISLC
+    wfo: SLC
+    lat: 40.7781
+    lon: -111.9694
+    tz: America/Denver
+    std_utc_offset_hours: -7
+    series: [KXSLCSNOWM]
+    verified: rules-2025-26
+  KDFW:
+    name: Dallas/Fort Worth
+    icao: KDFW
+    cli_id: KDFW
+    cli_product: CLIDFW
+    wfo: FWD
+    lat: 32.8974
+    lon: -97.0220
+    tz: America/Chicago
+    std_utc_offset_hours: -6
+    series: [KXDALSNOWM]
+    verified: rules-2025-26
+  KAUS:
+    name: Austin Bergstrom
+    icao: KAUS
+    cli_id: KAUS
+    cli_product: CLIAUS
+    wfo: EWX
+    lat: 30.1831
+    lon: -97.6799
+    tz: America/Chicago
+    std_utc_offset_hours: -6
+    series: [KXAUSSNOWM]
+    verified: rules-2025-26
+  KHOU:
+    name: Houston Hobby
+    icao: KHOU
+    cli_id: KHOU
+    cli_product: CLIHOU
+    wfo: HGX
+    lat: 29.6375
+    lon: -95.2825
+    tz: America/Chicago
+    std_utc_offset_hours: -6
+    series: [KXHOUSNOWM]
+    verified: rules-2025-26
+
+# Series with open markets but NO confirmed station yet (new this season, so no
+# settled rule text to read): KXDENSNOWM, KXMKESNOWM, KXMSPSNOWM, KXPITSNOWM,
+# KXTTNSNOWM. Confirm on the TWC dashboard before adding them here.

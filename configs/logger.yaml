@@ -1,0 +1,46 @@
+# Market logger settings. Times are UTC, intervals are seconds.
+kalshi:
+  # Kalshi's recommended production host for API traders (docs, 2026-11-14).
+  # https://api.elections.kalshi.com/trade-api/v2 is the older, still-supported host.
+  base_url: https://external-api.kalshi.com/trade-api/v2
+  # Unauthenticated limits are not published ("separate limits", back off on 429).
+  # Measured 2026-11-14: about 8 requests/second from one IP starts returning 429.
+  # A base cycle needs roughly 15 requests, so 2 requests/second is plenty.
+  min_request_interval_s: 0.5
+  timeout_s: 20
+  max_attempts: 6
+  user_agent: pmw-research-logger/0.1
+
+cadence:
+  orderbook_base_s: 300     # full-depth book for every tradable tracked market
+  orderbook_hot_s: 60       # extra books for hot markets between base cycles
+  markets_s: 300            # market snapshot rides on the base cycle
+  discovery_s: 3600
+  flush_s: 600              # a crash loses at most this much orderbook data
+  flush_max_rows: 20000
+
+hot:
+  # A market's whole event goes hot when one strike trades this many contracts
+  # between two base cycles.
+  volume_spike_contracts: 200
+  volume_hot_hold_s: 3600
+
+bursts:
+  # Fast cadence for snow markets while major model runs are arriving.
+  # APPROXIMATE availability windows, to be checked against real file
+  # timestamps on NOMADS / ECMWF open data (see docs/decisions.md D-012).
+  groups: [snow, snow_storm]
+  windows_utc:
+    - ["03:30", "05:15"]    # GFS/GEFS 00Z
+    - ["09:30", "11:15"]    # GFS/GEFS 06Z
+    - ["15:30", "17:15"]    # GFS/GEFS 12Z
+    - ["21:30", "23:15"]    # GFS/GEFS 18Z
+    - ["06:45", "08:15"]    # ECMWF 00Z open data
+    - ["18:45", "20:15"]    # ECMWF 12Z open data
+
+trades:
+  startup_lookback_h: 24    # on (re)start, re-pull this much trade history per market
+
+raw:
+  enabled: true             # gzipped raw API responses, for re-parsing after a bug
+  retention_days: 14

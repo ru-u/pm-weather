@@ -1,0 +1,1215 @@
+{
+ "note": "Real IEM json/cli.py rows for KNYC, fetched 2026-11-14, trimmed to the fields we parse.",
+ "results": [
+  {
+   "high": 43,
+   "low": 34,
+   "precip": 0.0,
+   "product": "202512020625-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.0,
+   "station": "KNYC",
+   "valid": "2025-12-01"
+  },
+  {
+   "high": 40,
+   "low": 34,
+   "precip": 0.78,
+   "product": "202512030627-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.0,
+   "station": "KNYC",
+   "valid": "2025-12-02"
+  },
+  {
+   "high": 41,
+   "low": 31,
+   "precip": 0.0,
+   "product": "202512041421-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.0,
+   "station": "KNYC",
+   "valid": "2025-12-03"
+  },
+  {
+   "high": 41,
+   "low": 24,
+   "precip": 0.0,
+   "product": "202512050633-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.0,
+   "station": "KNYC",
+   "valid": "2025-12-04"
+  },
+  {
+   "high": 32,
+   "low": 20,
+   "precip": 0.0,
+   "product": "202512060716-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.0,
+   "station": "KNYC",
+   "valid": "2025-12-05"
+  },
+  {
+   "high": 42,
+   "low": 30,
+   "precip": 0.02,
+   "product": "202512070645-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-06"
+  },
+  {
+   "high": 43,
+   "low": 34,
+   "precip": 0.0,
+   "product": "202512080628-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-07"
+  },
+  {
+   "high": 38,
+   "low": 22,
+   "precip": 0.0,
+   "product": "202512090623-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-08"
+  },
+  {
+   "high": 35,
+   "low": 19,
+   "precip": 0.0,
+   "product": "202512100621-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-09"
+  },
+  {
+   "high": 47,
+   "low": 32,
+   "precip": 0.07,
+   "product": "202512110618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-10"
+  },
+  {
+   "high": 41,
+   "low": 28,
+   "precip": 0.0,
+   "product": "202512120624-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-11"
+  },
+  {
+   "high": 35,
+   "low": 25,
+   "precip": 0.0,
+   "product": "202512130645-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-12"
+  },
+  {
+   "high": 41,
+   "low": 27,
+   "precip": 0.03,
+   "product": "202512140626-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2025-12-13"
+  },
+  {
+   "high": 33,
+   "low": 19,
+   "precip": 0.51,
+   "product": "202512150659-KOKX-CDUS41-CLINYC",
+   "snow": 2.9,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-14"
+  },
+  {
+   "high": 29,
+   "low": 19,
+   "precip": 0.0,
+   "product": "202512160619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-15"
+  },
+  {
+   "high": 32,
+   "low": 24,
+   "precip": 0.0,
+   "product": "202512170617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-16"
+  },
+  {
+   "high": 47,
+   "low": 30,
+   "precip": 0.0,
+   "product": "202512180632-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-17"
+  },
+  {
+   "high": 50,
+   "low": 36,
+   "precip": 0.02,
+   "product": "202512190616-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-18"
+  },
+  {
+   "high": 58,
+   "low": 32,
+   "precip": 1.16,
+   "product": "202512201717-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-19"
+  },
+  {
+   "high": 38,
+   "low": 30,
+   "precip": 0.0,
+   "product": "202512210616-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-20"
+  },
+  {
+   "high": 46,
+   "low": 29,
+   "precip": 0.0,
+   "product": "202512220618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-21"
+  },
+  {
+   "high": 39,
+   "low": 28,
+   "precip": 0.0,
+   "product": "202512230618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-22"
+  },
+  {
+   "high": 40,
+   "low": 35,
+   "precip": 0.22,
+   "product": "202512240622-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-23"
+  },
+  {
+   "high": 46,
+   "low": 35,
+   "precip": 0.0,
+   "product": "202512250626-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-24"
+  },
+  {
+   "high": 49,
+   "low": 29,
+   "precip": 0.0,
+   "product": "202512260620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.9,
+   "station": "KNYC",
+   "valid": "2025-12-25"
+  },
+  {
+   "high": 29,
+   "low": 20,
+   "precip": 0.27,
+   "product": "202512270624-KOKX-CDUS41-CLINYC",
+   "snow": 1.7,
+   "snow_month": 4.6,
+   "station": "KNYC",
+   "valid": "2025-12-26"
+  },
+  {
+   "high": 31,
+   "low": 25,
+   "precip": 0.22,
+   "product": "202512280626-KOKX-CDUS41-CLINYC",
+   "snow": 2.6,
+   "snow_month": 7.2,
+   "station": "KNYC",
+   "valid": "2025-12-27"
+  },
+  {
+   "high": 39,
+   "low": 22,
+   "precip": "T",
+   "product": "202512290624-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 7.2,
+   "station": "KNYC",
+   "valid": "2025-12-28"
+  },
+  {
+   "high": 49,
+   "low": 31,
+   "precip": 0.08,
+   "product": "202512300634-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 7.2,
+   "station": "KNYC",
+   "valid": "2025-12-29"
+  },
+  {
+   "high": 33,
+   "low": 27,
+   "precip": 0.0,
+   "product": "202512310635-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 7.2,
+   "station": "KNYC",
+   "valid": "2025-12-30"
+  },
+  {
+   "high": 33,
+   "low": 27,
+   "precip": "T",
+   "product": "202601010625-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 7.2,
+   "station": "KNYC",
+   "valid": "2025-12-31"
+  },
+  {
+   "high": 36,
+   "low": 22,
+   "precip": 0.02,
+   "product": "202601021606-KOKX-CDUS41-CLINYC",
+   "snow": 0.5,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-01"
+  },
+  {
+   "high": 30,
+   "low": 20,
+   "precip": "T",
+   "product": "202601030619-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-02"
+  },
+  {
+   "high": 30,
+   "low": 23,
+   "precip": 0.0,
+   "product": "202601040647-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-03"
+  },
+  {
+   "high": 35,
+   "low": 26,
+   "precip": "T",
+   "product": "202601050628-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-04"
+  },
+  {
+   "high": 39,
+   "low": 29,
+   "precip": 0.0,
+   "product": "202601060635-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-05"
+  },
+  {
+   "high": 42,
+   "low": 35,
+   "precip": 0.01,
+   "product": "202601070633-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-06"
+  },
+  {
+   "high": 49,
+   "low": 37,
+   "precip": 0.01,
+   "product": "202601080624-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-07"
+  },
+  {
+   "high": 50,
+   "low": 42,
+   "precip": 0.0,
+   "product": "202601090618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-08"
+  },
+  {
+   "high": 54,
+   "low": 39,
+   "precip": 0.01,
+   "product": "202601100655-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-09"
+  },
+  {
+   "high": 52,
+   "low": 39,
+   "precip": 0.37,
+   "product": "202601110714-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-10"
+  },
+  {
+   "high": 47,
+   "low": 34,
+   "precip": 0.01,
+   "product": "202601120642-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-11"
+  },
+  {
+   "high": 41,
+   "low": 31,
+   "precip": 0.0,
+   "product": "202601130629-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-12"
+  },
+  {
+   "high": 48,
+   "low": 35,
+   "precip": 0.0,
+   "product": "202601140622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-13"
+  },
+  {
+   "high": 52,
+   "low": 45,
+   "precip": 0.0,
+   "product": "202601150622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-14"
+  },
+  {
+   "high": 47,
+   "low": 24,
+   "precip": 0.0,
+   "product": "202601160618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-15"
+  },
+  {
+   "high": 34,
+   "low": 22,
+   "precip": 0.0,
+   "product": "202601170620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-01-16"
+  },
+  {
+   "high": 39,
+   "low": 31,
+   "precip": 0.17,
+   "product": "202601180652-KOKX-CDUS41-CLINYC",
+   "snow": 1.0,
+   "snow_month": 1.5,
+   "station": "KNYC",
+   "valid": "2026-01-17"
+  },
+  {
+   "high": 36,
+   "low": 30,
+   "precip": 0.28,
+   "product": "202601190618-KOKX-CDUS41-CLINYC",
+   "snow": 1.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-18"
+  },
+  {
+   "high": 32,
+   "low": 22,
+   "precip": 0.0,
+   "product": "202601200619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-19"
+  },
+  {
+   "high": 26,
+   "low": 16,
+   "precip": 0.0,
+   "product": "202601210622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-20"
+  },
+  {
+   "high": 40,
+   "low": 17,
+   "precip": 0.0,
+   "product": "202601220617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-21"
+  },
+  {
+   "high": 47,
+   "low": 37,
+   "precip": 0.0,
+   "product": "202601230618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-22"
+  },
+  {
+   "high": 38,
+   "low": 14,
+   "precip": 0.0,
+   "product": "202601240718-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-23"
+  },
+  {
+   "high": 17,
+   "low": 9,
+   "precip": 0.0,
+   "product": "202601250616-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 2.5,
+   "station": "KNYC",
+   "valid": "2026-01-24"
+  },
+  {
+   "high": 22,
+   "low": 10,
+   "precip": 1.8,
+   "product": "202601260646-KOKX-CDUS41-CLINYC",
+   "snow": 11.4,
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-25"
+  },
+  {
+   "high": 27,
+   "low": 17,
+   "precip": 0.02,
+   "product": "202601270627-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-26"
+  },
+  {
+   "high": 22,
+   "low": 15,
+   "precip": 0.0,
+   "product": "202601280621-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-27"
+  },
+  {
+   "high": 23,
+   "low": 14,
+   "precip": 0.0,
+   "product": "202601290623-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-28"
+  },
+  {
+   "high": 23,
+   "low": 11,
+   "precip": 0.0,
+   "product": "202601300619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-29"
+  },
+  {
+   "high": 18,
+   "low": 9,
+   "precip": 0.0,
+   "product": "202601310621-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-30"
+  },
+  {
+   "high": 24,
+   "low": 10,
+   "precip": 0.0,
+   "product": "202602010617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 13.9,
+   "station": "KNYC",
+   "valid": "2026-01-31"
+  },
+  {
+   "high": 24,
+   "low": 10,
+   "precip": "T",
+   "product": "202602020625-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-02-01"
+  },
+  {
+   "high": 35,
+   "low": 14,
+   "precip": 0.0,
+   "product": "202602030620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-02-02"
+  },
+  {
+   "high": 33,
+   "low": 23,
+   "precip": 0.0,
+   "product": "202602040629-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-02-03"
+  },
+  {
+   "high": 33,
+   "low": 26,
+   "precip": 0.0,
+   "product": "202602050622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-02-04"
+  },
+  {
+   "high": 32,
+   "low": 20,
+   "precip": 0.0,
+   "product": "202602060632-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-02-05"
+  },
+  {
+   "high": 33,
+   "low": 23,
+   "precip": 0.02,
+   "product": "202602070624-KOKX-CDUS41-CLINYC",
+   "snow": 0.1,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-06"
+  },
+  {
+   "high": 27,
+   "low": 6,
+   "precip": "T",
+   "product": "202602080626-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-07"
+  },
+  {
+   "high": 18,
+   "low": 3,
+   "precip": 0.0,
+   "product": "202602090618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-08"
+  },
+  {
+   "high": 31,
+   "low": 10,
+   "precip": 0.0,
+   "product": "202602100623-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-09"
+  },
+  {
+   "high": 37,
+   "low": 24,
+   "precip": 0.0,
+   "product": "202602110620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-10"
+  },
+  {
+   "high": 41,
+   "low": 33,
+   "precip": 0.06,
+   "product": "202602120618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-11"
+  },
+  {
+   "high": 36,
+   "low": 27,
+   "precip": 0.0,
+   "product": "202602130618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-12"
+  },
+  {
+   "high": 38,
+   "low": 22,
+   "precip": 0.0,
+   "product": "202602140620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-13"
+  },
+  {
+   "high": 46,
+   "low": 29,
+   "precip": "T",
+   "product": "202602150618-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": 0.1,
+   "station": "KNYC",
+   "valid": "2026-02-14"
+  },
+  {
+   "high": 40,
+   "low": 32,
+   "precip": 0.04,
+   "product": "202602160622-KOKX-CDUS41-CLINYC",
+   "snow": 0.4,
+   "snow_month": 0.5,
+   "station": "KNYC",
+   "valid": "2026-02-15"
+  },
+  {
+   "high": 39,
+   "low": 29,
+   "precip": 0.04,
+   "product": "202602170640-KOKX-CDUS41-CLINYC",
+   "snow": 0.7,
+   "snow_month": 1.2,
+   "station": "KNYC",
+   "valid": "2026-02-16"
+  },
+  {
+   "high": 47,
+   "low": 35,
+   "precip": 0.0,
+   "product": "202602180625-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 1.2,
+   "station": "KNYC",
+   "valid": "2026-02-17"
+  },
+  {
+   "high": 41,
+   "low": 37,
+   "precip": 0.1,
+   "product": "202602190619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 1.2,
+   "station": "KNYC",
+   "valid": "2026-02-18"
+  },
+  {
+   "high": 42,
+   "low": 36,
+   "precip": 0.0,
+   "product": "202602200620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 1.2,
+   "station": "KNYC",
+   "valid": "2026-02-19"
+  },
+  {
+   "high": 37,
+   "low": 34,
+   "precip": 0.38,
+   "product": "202602210700-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 1.2,
+   "station": "KNYC",
+   "valid": "2026-02-20"
+  },
+  {
+   "high": 46,
+   "low": 36,
+   "precip": 0.0,
+   "product": "202602220626-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 1.2,
+   "station": "KNYC",
+   "valid": "2026-02-21"
+  },
+  {
+   "high": 39,
+   "low": 30,
+   "precip": 0.82,
+   "product": "202602230634-KOKX-CDUS41-CLINYC",
+   "snow": 8.8,
+   "snow_month": 10.0,
+   "station": "KNYC",
+   "valid": "2026-02-22"
+  },
+  {
+   "high": 35,
+   "low": 28,
+   "precip": 1.1,
+   "product": "202602240651-KOKX-CDUS41-CLINYC",
+   "snow": 10.9,
+   "snow_month": 20.9,
+   "station": "KNYC",
+   "valid": "2026-02-23"
+  },
+  {
+   "high": 31,
+   "low": 23,
+   "precip": 0.0,
+   "product": "202602250620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 20.9,
+   "station": "KNYC",
+   "valid": "2026-02-24"
+  },
+  {
+   "high": 44,
+   "low": 26,
+   "precip": 0.09,
+   "product": "202602260630-KOKX-CDUS41-CLINYC",
+   "snow": 1.4,
+   "snow_month": 22.3,
+   "station": "KNYC",
+   "valid": "2026-02-25"
+  },
+  {
+   "high": 49,
+   "low": 35,
+   "precip": 0.0,
+   "product": "202602270620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 22.3,
+   "station": "KNYC",
+   "valid": "2026-02-26"
+  },
+  {
+   "high": 44,
+   "low": 29,
+   "precip": 0.0,
+   "product": "202602280617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 22.3,
+   "station": "KNYC",
+   "valid": "2026-02-27"
+  },
+  {
+   "high": 54,
+   "low": 33,
+   "precip": 0.0,
+   "product": "202603010616-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": 22.3,
+   "station": "KNYC",
+   "valid": "2026-02-28"
+  },
+  {
+   "high": 43,
+   "low": 30,
+   "precip": 0.01,
+   "product": "202603020617-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-01"
+  },
+  {
+   "high": 33,
+   "low": 21,
+   "precip": 0.0,
+   "product": "202603030619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-02"
+  },
+  {
+   "high": 36,
+   "low": 29,
+   "precip": 0.34,
+   "product": "202603040620-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-03"
+  },
+  {
+   "high": 49,
+   "low": 35,
+   "precip": 0.02,
+   "product": "202603051443-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-04"
+  },
+  {
+   "high": 46,
+   "low": 37,
+   "precip": 1.42,
+   "product": "202603060620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-05"
+  },
+  {
+   "high": 41,
+   "low": 37,
+   "precip": 0.16,
+   "product": "202603070628-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-06"
+  },
+  {
+   "high": 52,
+   "low": 36,
+   "precip": 0.0,
+   "product": "202603080623-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-07"
+  },
+  {
+   "high": 69,
+   "low": 50,
+   "precip": "T",
+   "product": "202603090652-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-08"
+  },
+  {
+   "high": 73,
+   "low": 51,
+   "precip": 0.0,
+   "product": "202603100622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-09"
+  },
+  {
+   "high": 80,
+   "low": 51,
+   "precip": 0.0,
+   "product": "202603110636-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-10"
+  },
+  {
+   "high": 72,
+   "low": 53,
+   "precip": 0.37,
+   "product": "202603120639-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-11"
+  },
+  {
+   "high": 63,
+   "low": 34,
+   "precip": 0.08,
+   "product": "202603130631-KOKX-CDUS41-CLINYC",
+   "snow": "T",
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-12"
+  },
+  {
+   "high": 42,
+   "low": 32,
+   "precip": 0.0,
+   "product": "202603140617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-13"
+  },
+  {
+   "high": 51,
+   "low": 38,
+   "precip": 0.0,
+   "product": "202603150620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-14"
+  },
+  {
+   "high": 48,
+   "low": 35,
+   "precip": 0.0,
+   "product": "202603160617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-15"
+  },
+  {
+   "high": 57,
+   "low": 48,
+   "precip": 0.59,
+   "product": "202603170622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-16"
+  },
+  {
+   "high": 48,
+   "low": 29,
+   "precip": "T",
+   "product": "202603180616-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-17"
+  },
+  {
+   "high": 37,
+   "low": 25,
+   "precip": 0.0,
+   "product": "202603190625-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-18"
+  },
+  {
+   "high": 44,
+   "low": 32,
+   "precip": 0.0,
+   "product": "202603200631-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-19"
+  },
+  {
+   "high": 57,
+   "low": 39,
+   "precip": 0.03,
+   "product": "202603210620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-20"
+  },
+  {
+   "high": 59,
+   "low": 46,
+   "precip": 0.0,
+   "product": "202603220619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-21"
+  },
+  {
+   "high": 63,
+   "low": 44,
+   "precip": 0.15,
+   "product": "202603230625-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-22"
+  },
+  {
+   "high": 50,
+   "low": 34,
+   "precip": 0.4,
+   "product": "202603240618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-23"
+  },
+  {
+   "high": 48,
+   "low": 32,
+   "precip": 0.0,
+   "product": "202603250618-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-24"
+  },
+  {
+   "high": 54,
+   "low": 38,
+   "precip": 0.0,
+   "product": "202603260637-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-25"
+  },
+  {
+   "high": 76,
+   "low": 45,
+   "precip": 0.02,
+   "product": "202603270706-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-26"
+  },
+  {
+   "high": 65,
+   "low": 41,
+   "precip": "T",
+   "product": "202603280617-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-27"
+  },
+  {
+   "high": 44,
+   "low": 31,
+   "precip": 0.0,
+   "product": "202603290620-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-28"
+  },
+  {
+   "high": 54,
+   "low": 34,
+   "precip": 0.0,
+   "product": "202603300619-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-29"
+  },
+  {
+   "high": 73,
+   "low": 47,
+   "precip": "T",
+   "product": "202603310622-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-30"
+  },
+  {
+   "high": 81,
+   "low": 60,
+   "precip": 0.01,
+   "product": "202604010621-KOKX-CDUS41-CLINYC",
+   "snow": 0.0,
+   "snow_month": "T",
+   "station": "KNYC",
+   "valid": "2026-03-31"
+  }
+ ]
+}

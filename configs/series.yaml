@@ -1,0 +1,46 @@
+# Which Kalshi series we track. Matching is by regex, never by hardcoded ticker,
+# so new cities and new storm markets are picked up by the next discovery run.
+#
+# Each pattern is matched (case-insensitive) against the string
+#     "TICKER | title | tag1, tag2"
+# Groups are checked in order and the FIRST match wins.
+kalshi:
+  # Categories scanned on every discovery run. ERCOT demand is filed under
+  # Economics and the power-price series under Commodities, not under weather.
+  # `pmw discover --all-categories` scans all ~16k series to catch strays.
+  categories:
+    - Climate and Weather
+    - Economics
+    - Commodities
+
+  groups:
+    snow_storm:
+      description: Storm-window and multi-city snow markets, listed only when a storm is forecast.
+      match: ['^KXSNOWSTORM \|', '^KXSNOWCITIES \|', 'snowstorm', 'blizzard']
+      hot_close_within_hours: 72
+
+    snow:
+      description: Monthly, seasonal, holiday and ski-resort snowfall totals.
+      # "snow" in the ticker or the title only. Not in the tags: Kalshi tags
+      # plain rain markets "Snow and rain".
+      match: ['^[^|]*(\|[^|]*)?snow', 'white christmas']
+      # Ski-resort OPENING-DATE markets mention snow but are not snowfall totals.
+      exclude: ['OPEN \|', 'opening']
+
+    ercot_demand:
+      description: ERCOT daily peak demand (highest hourly total system load).
+      match: ['^KXTXERCOTPEAK']
+      hot_close_within_hours: 36
+
+    power_price:
+      description: ERCOT / PJM / MISO / CAISO hub power price markets (later phase, logged now).
+      match: ['power price', '^KX(ERCOT|PJM|MISO|CAISO|NYISO|ISONE|SPP)[A-Z]*[DWM] \|']
+      exclude: ['^KXERCOTX', '^KXPJMEMERGENCY', '^KXPJMBREAKUP']
+
+    low_temp:
+      description: Daily low temperature markets, US stations only.
+      match: ['^KXLOWT', '^KXLOW[A-Z]+ \|', 'lowest temp', 'low temp', 'minimum temp']
+      # International stations use 4-letter ICAO codes after KXLOWT (EGLL, LFPG,
+      # RJTT, ...). US city codes after a leading E/L/R/V/W/Y/Z/O/M/C are at most
+      # 2 more letters (EWR, LAX, LV, MIA, MIN, OKC, CHI), so this is safe today.
+      exclude: ['^KXLOWT[ELRVWYZOMC][A-Z]{3} \|', '^KXLOWTSBGR \|']

@@ -1,0 +1,80 @@
+{
+ "candlesticks": [
+  {
+   "end_period_ts": 1794459600,
+   "open_interest_fp": "1143.10",
+   "price": {
+    "close_dollars": "0.4800",
+    "high_dollars": "0.4800",
+    "low_dollars": "0.4800",
+    "mean_dollars": "0.4800",
+    "open_dollars": "0.4800",
+    "previous_dollars": "0.4700"
+   },
+   "volume_fp": "3.05",
+   "yes_ask": {
+    "close_dollars": "0.4800",
+    "high_dollars": "0.4800",
+    "low_dollars": "0.4600",
+    "open_dollars": "0.4700"
+   },
+   "yes_bid": {
+    "close_dollars": "0.4500",
+    "high_dollars": "0.4500",
+    "low_dollars": "0.3600",
+    "open_dollars": "0.3700"
+   }
+  },
+  {
+   "end_period_ts": 1794546000,
+   "open_interest_fp": "1324.05",
+   "price": {
+    "close_dollars": "0.4700",
+    "high_dollars": "0.5400",
+    "low_dollars": "0.3400",
+    "mean_dollars": "0.4428",
+    "open_dollars": "0.4500",
+    "previous_dollars": "0.4800"
+   },
+   "volume_fp": "420.71",
+   "yes_ask": {
+    "close_dollars": "0.4500",
+    "high_dollars": "0.6900",
+    "low_dollars": "0.4200",
+    "open_dollars": "0.4800"
+   },
+   "yes_bid": {
+    "close_dollars": "0.4200",
+    "high_dollars": "0.4600",
+    "low_dollars": "0.2000",
+    "open_dollars": "0.4500"
+   }
+  },
+  {
+   "end_period_ts": 1794632400,
+   "open_interest_fp": "1715.82",
+   "price": {
+    "close_dollars": "0.5600",
+    "high_dollars": "0.6900",
+    "low_dollars": "0.4700",
+    "mean_dollars": "0.5909",
+    "open_dollars": "0.4800",
+    "previous_dollars": "0.4700"
+   },
+   "volume_fp": "672.20",
+   "yes_ask": {
+    "close_dollars": "0.6000",
+    "high_dollars": "0.6900",
+    "low_dollars": "0.4500",
+    "open_dollars": "0.4500"
+   },
+   "yes_bid": {
+    "close_dollars": "0.5700",
+    "high_dollars": "0.6000",
+    "low_dollars": "0.3300",
+    "open_dollars": "0.4200"
+   }
+  }
+ ],
+ "ticker": "KXNYCSNOWM-26DEC-2"
+}

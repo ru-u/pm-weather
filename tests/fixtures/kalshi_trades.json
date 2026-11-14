@@ -1,0 +1,65 @@
+{
+ "cursor": "EhIKEAcmhbAKyZhQhT5W9esT_BwaDAjw_tzXBhCw6464Aw",
+ "trades": [
+  {
+   "count_fp": "1.20",
+   "created_time": "2026-11-14T05:48:53.48229Z",
+   "is_block_trade": false,
+   "no_price_dollars": "0.4400",
+   "taker_book_side": "ask",
+   "taker_outcome_side": "no",
+   "taker_side": "no",
+   "ticker": "KXNYCSNOWM-26DEC-2",
+   "trade_id": "0726ba6e-f9d9-af26-ecee-4c632f94c012",
+   "yes_price_dollars": "0.5600"
+  },
+  {
+   "count_fp": "21.13",
+   "created_time": "2026-11-14T05:48:53.48229Z",
+   "is_block_trade": false,
+   "no_price_dollars": "0.4300",
+   "taker_book_side": "ask",
+   "taker_outcome_side": "no",
+   "taker_side": "no",
+   "ticker": "KXNYCSNOWM-26DEC-2",
+   "trade_id": "0726ba6e-e5c1-a2b9-f43b-d8089eda7b48",
+   "yes_price_dollars": "0.5700"
+  },
+  {
+   "count_fp": "10.69",
+   "created_time": "2026-11-14T03:07:13.006071Z",
+   "is_block_trade": false,
+   "no_price_dollars": "0.4400",
+   "taker_book_side": "ask",
+   "taker_outcome_side": "no",
+   "taker_side": "no",
+   "ticker": "KXNYCSNOWM-26DEC-2",
+   "trade_id": "0726b812-00e9-b27e-e937-771e30196362",
+   "yes_price_dollars": "0.5600"
+  },
+  {
+   "count_fp": "1.62",
+   "created_time": "2026-11-14T00:42:03.869229Z",
+   "is_block_trade": false,
+   "no_price_dollars": "0.4000",
+   "taker_book_side": "bid",
+   "taker_outcome_side": "yes",
+   "taker_side": "yes",
+   "ticker": "KXNYCSNOWM-26DEC-2",
+   "trade_id": "07268bb0-6e99-b9fd-be9a-3426eae51c93",
+   "yes_price_dollars": "0.6000"
+  },
+  {
+   "count_fp": "30.00",
+   "created_time": "2026-11-13T16:48:48.92299Z",
+   "is_block_trade": false,
+   "no_price_dollars": "0.4600",
+   "taker_book_side": "ask",
+   "taker_outcome_side": "no",
+   "taker_side": "no",
+   "ticker": "KXNYCSNOWM-26DEC-2",
+   "trade_id": "072685b0-0ac9-9850-853e-56f5eb13fc1c",
+   "yes_price_dollars": "0.5400"
+  }
+ ]
+}
