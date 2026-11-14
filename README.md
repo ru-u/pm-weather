@@ -44,12 +44,11 @@ timestamp, is the market's probability better or worse than the free forecast?**
 
 ## Results so far
 
-- **Settlement replication:** 242 settled monthly snowfall markets across 11
-  cities were recomputed from NWS Daily Climate Report data. 203 reproduce
-  Kalshi's result and none contradict it. 34 cannot yet be decided because the
-  source has days with no snowfall value, and 5 Chicago markets were settled by
-  Kalshi at a price rather than yes/no. Getting from 203 to all of them is the
-  next settlement task.
+- **Settlement replication:** all 396 settled snowfall markets (monthly city
+  ladders in 11 cities, New York back to 2021, and last winter's storm-window
+  markets) were recomputed from official NWS daily snowfall. 389 reproduce
+  Kalshi's result and none contradict it. The remaining 7 belong to one Chicago
+  event that Kalshi itself unwound, and are excluded from analysis.
 - **The sample is small.** Kalshi has roughly 62 settled city-months and 6
   storm windows of snow history, heavily clustered. One winter of market data
   cannot prove a small edge, so the forecast itself is validated separately on
@@ -58,7 +57,7 @@ timestamp, is the market's probability better or worse than the free forecast?**
   of the NWS in the settlement hierarchy. The logger versions every market's
   rule text for exactly this reason.
 
-Details: [`docs/findings/2026-11-14-recon.md`](docs/findings/2026-11-14-recon.md).
+Details: [`docs/findings/`](docs/findings/).
 
 ## What is built
 
@@ -68,8 +67,8 @@ Details: [`docs/findings/2026-11-14-recon.md`](docs/findings/2026-11-14-recon.md
 | Fee model | `src/pmw/markets/fees.py` | Exact decimal arithmetic, tested against the exchange's documented example. |
 | Market discovery | `src/pmw/logger/discovery.py` | Regex filters over series metadata, no hardcoded tickers. |
 | Market logger | `src/pmw/logger/` | 5-minute books for everything, 1-minute for storm markets and volume spikes, append-only Parquet, gap detection, daily report. |
-| Settlement replication | `src/pmw/settle/snow.py` | Trace, strict inequality and missing-day rules from the contract terms. |
-| NWS climate reports | `src/pmw/weather/iem_cli.py` | Daily snowfall per station via Iowa Environmental Mesonet. |
+| Settlement replication | `src/pmw/settle/snow.py` | Period, station and strike read from each market's rule text; trace, strict inequality and missing-day rules from the contract terms. |
+| NWS climate data | `src/pmw/weather/` | Daily snowfall per station from the Daily Climate Report (via Iowa Environmental Mesonet), with ACIS as a second source for missing days. |
 | Time handling | `src/pmw/utils/timeutil.py` | NWS climate days run on local standard time all year. |
 
 ```

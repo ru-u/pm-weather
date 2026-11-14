@@ -170,3 +170,14 @@ latest logger deployment is a successful `railway up` build. See
 at 16:15 UTC on 2026-11-14, so the report for that date has about 93 of 288 base
 cycles and trips the "under 95% of a full day" check. Reports from 2026-11-15
 onward should be clean; a gap or shortfall after that date is real.
+
+**D-026. ACIS is the second source for daily snowfall.** Used only for days
+where the CLI report (via IEM) has no value, never to override a CLI value.
+With it, every settled snow market outside the excluded Chicago December 2025
+event reproduces (389 of 389). The settlement gate for Phase 2A is met for
+last season's rules.
+
+**D-027. Contract terms come from rule text first.** Period, station and strike
+are parsed from each market's own rules when stated. A market whose rules name
+a station that is not in `configs/stations.yaml` raises an error instead of
+falling back to a default.

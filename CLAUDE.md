@@ -54,7 +54,7 @@ make discover       # every open Kalshi market matching configs/series.yaml
 make log            # run the market logger (local ./data unless PMW_S3_* set)
 make log-test       # 3 quick cycles for a smoke test
 make report         # daily logger report (yesterday UTC)
-make settle-check SERIES=KXNYCSNOWM
+make settle-check SERIES=all        # or one series, e.g. KXNYCSNOWM
 make pull-data      # copy the Railway bucket to ./data/bucket
 ```
 
@@ -70,7 +70,7 @@ configs/      series.yaml (discovery filters), stations.yaml, logger.yaml
 docs/         decisions, preregistration, settlement_rules, data_sources, deploy, findings/
 src/pmw/
   markets/    kalshi.py (public client), fees.py
-  weather/    iem_cli.py (NWS CLI via IEM); nbm/hrrr/... to come
+  weather/    iem_cli.py (NWS CLI via IEM), acis.py (second source); nbm/hrrr/... to come
   energy/     ERCOT (Phase 3)
   logger/     discovery, schemas, buffer, runner, report
   settle/     snow.py (SNOWOVERTIME replication)
@@ -116,6 +116,11 @@ data/         gitignored: raw/ interim/ processed/ live/
   the NWS CLI report directly. "Above" is strictly greater. Trace is above 0.00
   but not above any positive strike. Missing data at the last expiration
   resolves every strike to No.
+- Replication status: 389 of 396 settled snow markets reproduce, 0 contradict;
+  the other 7 are the excluded `KXCHISNOWM-25DEC` event. Check with
+  `uv run pmw settle-check all --brief` after any change to `settle/` or
+  `weather/`. Daily snowfall comes from the CLI report (IEM); ACIS fills only
+  the days the CLI lacks. Period, station and strike are parsed from rule text.
 - NWS climate days run on local STANDARD time all year
   (`pmw.utils.timeutil.climate_day_bounds_utc`). Some storm-window markets say
   "local calendar days in Eastern Time" instead: read each market's rules.

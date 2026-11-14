@@ -103,20 +103,28 @@ ski-resort series.
 3. **Chicago.** Of 35 settled KXCHISNOWM markets, 29 cite CLIORD (O'Hare) and 6
    cite CLIMDW (Midway). The December 2025 event has five markets settled
    `scalar` (not yes/no) and a second event `KXCHISNOWM-25DECB` was listed.
-   This looks like a station mix-up that Kalshi unwound. Exclude December 2025
-   Chicago from any backtest until explained.
-4. **Missing CLI snow values.** Seattle, Boston, Dallas, Austin and Houston have
-   days with no CLI snowfall value in IEM. Kalshi settled those markets, so it
-   used a value from somewhere (a later CLI issuance, the monthly CLM report, or
-   NOWData). Find which, and add it as a fallback source.
+   This looks like a station mix-up that Kalshi unwound. The re-listed event
+   reproduces from O'Hare data (9.5 inches, equal to Kalshi's recorded value).
+   The original event stays excluded.
+4. **Missing CLI snow values: resolved 2026-11-14.** Days with no CLI snowfall
+   value are filled from ACIS, the data service behind the NWS climate pages.
+   ACIS had a value for every such day and agrees with the CLI wherever both
+   exist. See `docs/findings/2026-11-14-settlement-replication.md`.
 5. **Ski resorts** settle on OnTheSnow resort-reported totals, a different and
    less auditable source. Logged, not modelled.
 
 ### Replication status
 
-See `docs/findings/2026-11-14-recon.md`. Summary: 242 settled monthly markets in
-11 cities checked. 203 reproduced, 0 contradicted, 34 undecided because of
-missing CLI days, 5 settled `scalar` (Chicago, Dec 2025).
+`uv run pmw settle-check all --brief`. As of 2026-11-14: 396 settled markets in
+13 series (monthly city ladders, NYC back to November 2021, storm windows).
+**389 reproduce, 0 contradict.** The other 7 are all in `KXCHISNOWM-25DEC`
+(5 settled `scalar`, 2 cite Midway, which has no snowfall record), an event the
+pre-registration excludes. Details in
+`docs/findings/2026-11-14-settlement-replication.md`.
+
+The contract's period, station and strike are read from each market's rule text
+when the text states them (storm-window dates, the CLI product id, "strictly
+greater than N"), and only otherwise from the ticker and `configs/stations.yaml`.
 
 ---
 

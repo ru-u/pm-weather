@@ -73,6 +73,20 @@ stations:
     # 29 of 35 settled markets cite CLIORD; 6 cite CLIMDW (Midway) and 5 settled
     # "scalar" rather than yes/no. Treat Chicago as unresolved until explained.
     verified: rules-2025-26 (with Midway anomaly)
+  KMDW:
+    name: Chicago Midway
+    icao: KMDW
+    cli_id: KMDW
+    cli_product: CLIMDW
+    wfo: LOT
+    lat: 41.7868
+    lon: -87.7522
+    tz: America/Chicago
+    std_utc_offset_hours: -6
+    # Not the default for any series. Some December 2025 Chicago markets cited
+    # CLIMDW in their rule text; the station is looked up from that text.
+    series: []
+    verified: rules-2025-26 (cited by some KXCHISNOWM-25DEC markets)
   KDTW:
     name: Detroit Metro
     icao: KDTW

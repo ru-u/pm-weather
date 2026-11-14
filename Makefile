@@ -40,8 +40,8 @@ log-test:  ## Three quick logger cycles at a 60 s cadence, for a local smoke tes
 report:  ## Daily logger report for yesterday (UTC); `make report DATE=2026-11-14`
 	uv run pmw report $(if $(DATE),--date $(DATE),)
 
-settle-check:  ## Replicate settled monthly snow markets; `make settle-check SERIES=KXBOSSNOWM`
-	uv run pmw settle-check $(or $(SERIES),KXNYCSNOWM)
+settle-check:  ## Replicate settled snow markets; `make settle-check SERIES=all`
+	uv run pmw settle-check $(or $(SERIES),KXNYCSNOWM) --brief
 
 pull-data:  ## Copy the Railway bucket to ./data/bucket (needs PMW_S3_* in .env)
 	uv run --env-file .env python scripts/pull_data.py

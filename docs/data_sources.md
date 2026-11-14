@@ -77,6 +77,20 @@ Last reviewed: 2026-11-14.
 - History: decades for first-order stations. Terms: IEM asks for reasonable use;
   we cache per station-year.
 
+### ACIS (Applied Climate Information System)
+
+- `POST https://data.rcc-acis.org/StnData` with `{"sid": "KSEA", "sdate": ...,
+  "edate": ..., "elems": [{"name": "snow"}]}`. No key. Accepts ICAO ids.
+- The data service behind the NWS "NOWData" climate pages: the same official
+  station record, per day. Values: number string, `"T"` trace, `"M"` missing; a
+  trailing letter (for example `"1.2A"`) flags a multi-day accumulation, which
+  we treat as missing.
+- Role here: second source for daily snowfall, used only on days where the CLI
+  report has no value. Agrees with CLI on every day checked where both exist.
+- Like IEM, it serves the latest value, not the initial one.
+- Also the natural source for long station histories and climatology (Phase 2,
+  step 3), instead of GHCN-Daily.
+
 ### The Weather Company dashboard
 
 - <https://weather.com/kalshi>. First in Kalshi's source hierarchy for snow and

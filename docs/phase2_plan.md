@@ -42,7 +42,7 @@ NBM station guidance (plus climatology where NBM does not reach)?
 - Store raw responses under `data/raw/kalshi/`, parsed tables under `data/interim/`.
 - Output: one row per (market, hour) with bid, ask, mid, volume.
 
-### Step 2. Outcomes and settlement replication (about a day)
+### Step 2. Outcomes and settlement replication (DONE 2026-11-14: 389 of 389 outside the excluded Chicago event)
 
 - Extend `pmw settle-check` to storm windows (parse window dates and station
   from rule text) and to the older NYC series.

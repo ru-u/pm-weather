@@ -177,25 +177,41 @@ def fee(
     )
 
 
+SNOW_SERIES_WITH_HISTORY = [
+    "KXNYCSNOWM", "KXBOSSNOWM", "KXDCSNOWM", "KXPHILSNOWM", "KXCHISNOWM", "KXDETSNOWM",
+    "KXSEASNOWM", "KXSLCSNOWM", "KXDALSNOWM", "KXAUSSNOWM", "KXHOUSNOWM", "KXSNOWNYM",
+    "KXSNOWSTORM",
+]  # fmt: skip
+
+
 @app.command("settle-check")
 def settle_check(
-    series: str = typer.Argument("KXNYCSNOWM", help="Kalshi monthly snow series ticker"),
+    series: str = typer.Argument("KXNYCSNOWM", help="Snow series ticker, or 'all'"),
+    brief: bool = typer.Option(False, help="Only print events and mismatches."),
+    no_fallback: bool = typer.Option(False, help="Use CLI data only; do not fill gaps from ACIS."),
 ) -> None:
-    """Replicate settlement of settled monthly snow markets from NWS CLI data (via IEM)."""
+    """Replicate settlement of settled snow markets from NWS daily snowfall data."""
     from pmw.markets.kalshi import KalshiPublic
-    from pmw.settle.snow import check_monthly_series, format_checks
+    from pmw.settle.snow import check_series, format_checks, summarize
     from pmw.utils.config import load_logger_config, load_stations_config
+    from pmw.weather.acis import Acis
     from pmw.weather.iem_cli import IemCli
 
     _setup_logging()
-    station = load_stations_config().for_series(series)
-    if station is None:
-        raise typer.BadParameter(f"no settlement station for {series} in configs/stations.yaml")
-    client = KalshiPublic(load_logger_config().kalshi.base_url)
-    checks = check_monthly_series(client, IemCli(), series, station)
+    stations = load_stations_config()
+    client = KalshiPublic(load_logger_config().kalshi.base_url, min_request_interval_s=0.5)
+    iem, acis = IemCli(), (None if no_fallback else Acis())
+    targets = SNOW_SERIES_WITH_HISTORY if series == "all" else [series]
+    totals: dict[str, int] = {}
+    for target in targets:
+        checks = check_series(client, iem, target, stations, acis)
+        typer.echo(format_checks(checks, target, verbose=not brief and series != "all"))
+        for key, value in summarize(checks).items():
+            totals[key] = totals.get(key, 0) + value
     client.close()
-    typer.echo(format_checks(checks, series, station.cli_id))
-    if any(not c.match for c in checks):
+    if len(targets) > 1:
+        typer.echo(f"\nALL SERIES: {totals}")
+    if totals["reproduced"] != totals["markets"]:
         raise typer.Exit(1)
 
 
