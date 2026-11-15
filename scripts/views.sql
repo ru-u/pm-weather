@@ -1,6 +1,7 @@
 -- DuckDB view layer over logger output. Usage:
 --   duckdb -cmd ".read scripts/views.sql"          (from the repo root)
 -- Point ROOT at data (local logger) or data/bucket (after `make pull-data`).
+SET TimeZone = 'UTC';  -- every timestamp is stored in UTC; do not let the session localise them
 SET VARIABLE root = 'data';
 
 CREATE OR REPLACE VIEW orderbooks AS

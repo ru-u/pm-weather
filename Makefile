@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-all lint format typecheck test check discover log log-test report \
-        settle-check pull-data docker-build
+        settle-check nbm climo pull-data docker-build
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -42,6 +42,14 @@ report:  ## Daily logger report for yesterday (UTC); `make report DATE=2026-11-1
 
 settle-check:  ## Replicate settled snow markets; `make settle-check SERIES=all`
 	uv run pmw settle-check $(or $(SERIES),KXNYCSNOWM) --brief
+
+nbm:  ## Pull and parse NBM probabilistic bulletins for the five sample winters (resumable)
+	for w in "2021-11-01 2022-03-31" "2022-11-01 2023-03-31" "2023-11-01 2024-03-31" "2024-11-01 2025-03-31" "2025-11-01 2026-03-31"; do \
+		set -- $$w; uv run pmw nbm-pull $$1 $$2; done
+	uv run pmw nbm-parse 2021-11-01 2026-03-31
+
+climo:  ## Pull 35 years of daily snowfall per station for climatology
+	uv run pmw climo-pull
 
 pull-data:  ## Copy the Railway bucket to ./data/bucket (needs PMW_S3_* in .env)
 	uv run --env-file .env python scripts/pull_data.py

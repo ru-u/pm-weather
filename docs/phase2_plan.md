@@ -54,7 +54,15 @@ NBM station guidance (plus climatology where NBM does not reach)?
   market that cannot be reproduced is listed with a reason and excluded before
   step 4, not after.
 
-### Step 3. NBM station forecasts, issue-time aware (pull and parser DONE 2026-11-15; climatology still to do)
+### Step 3. NBM station forecasts, issue-time aware (DONE 2026-11-15)
+
+Done: `pmw nbm-pull`, `pmw nbm-parse`, `pmw climo-pull`. Outputs:
+`data/raw/nbm/nbp/` (raw blocks, 756 days, 21 MB), `data/interim/nbm/nbp_periods.parquet`
+(359,744 forecast periods), `data/interim/climo/daily_snow.parquet` (35 years
+per station). Not yet pulled: the NBS bulletin (6-hour snowfall), needed in
+step 4 only for re-apportioning 12Z periods to climate days.
+
+Original plan for this step:
 
 - Download NBP and NBS text bulletins for the settlement stations, for every
   cycle in each market's life, from `noaa-nbm-grib2-pds`. Keep only our station

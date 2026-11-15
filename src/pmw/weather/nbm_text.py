@@ -25,6 +25,7 @@ import gzip
 import json
 import logging
 import re
+import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -217,6 +218,21 @@ class NbmTextArchive:
     def close(self) -> None:
         self._client.close()
 
+    def _get(self, url: str, headers: dict[str, str] | None = None) -> httpx.Response:
+        """GET with retries on dropped connections and 5xx (a long pull must survive blips)."""
+        last: Exception | None = None
+        for attempt in range(5):
+            try:
+                resp = self._client.get(url, headers=headers)
+                if resp.status_code < 500:
+                    return resp
+                last = httpx.HTTPStatusError("server error", request=resp.request, response=resp)
+            except httpx.TransportError as exc:
+                last = exc
+            time.sleep(min(30.0, 2.0**attempt))
+        assert last is not None
+        raise last
+
     @staticmethod
     def _last_modified(resp: httpx.Response) -> datetime | None:
         raw = resp.headers.get("last-modified")
@@ -226,7 +242,7 @@ class NbmTextArchive:
         """Try the remembered offset. Returns (block text or None, last-modified, status)."""
         offset, length = self.offsets[station]
         self.range_requests += 1
-        resp = self._client.get(
+        resp = self._get(
             url, headers={"Range": f"bytes={offset}-{offset + max(length, RANGE_BYTES) - 1}"}
         )
         if resp.status_code == 404:
@@ -244,7 +260,7 @@ class NbmTextArchive:
 
     def _full(self, url: str) -> tuple[bytes | None, datetime | None]:
         self.full_downloads += 1
-        resp = self._client.get(url)
+        resp = self._get(url)
         if resp.status_code == 404:
             return None, None
         resp.raise_for_status()

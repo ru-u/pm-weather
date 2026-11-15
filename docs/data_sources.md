@@ -97,9 +97,15 @@ Last reviewed: 2026-11-14.
   temperature markets this season. No API known. To be checked by hand against
   CLI values at the first settlements.
 
-### NOAA GHCN-Daily (not built yet)
+### Station climatology
 
-- Longer station histories, for climatology and as a cross-check on CLI.
+- `pmw climo-pull` writes `data/interim/climo/daily_snow.parquet`: daily
+  snowfall from ACIS for every configured station, 1991-07 onward.
+- Winter days with no value: none to 0.2% at most stations, but Seattle 21%,
+  Austin 17%, Houston 35%, and Midway 97% (Midway has essentially no snowfall
+  record, which is why Kalshi's Midway-cited Chicago markets were unwound).
+  Climatology must be built from non-missing days only.
+- GHCN-Daily is no longer needed for this purpose.
 
 ### ERCOT (not built yet)
 
@@ -137,6 +143,13 @@ Last reviewed: 2026-11-14.
   (2026-01-25), so `Last-Modified` is trusted as availability only within 3
   hours of the cycle; otherwise cycle + 2 hours is used
   (`pmw.weather.nbm_text.available_at`).
+- **Measured over five winters (3,023 cycles, 2021-11 to 2026-03):** median
+  upload lag 69 minutes for the 07Z and 19Z cycles and 87 minutes for 01Z and
+  13Z; 90th percentile about 99 minutes; under 1% uploaded more than 3 hours
+  late. Coverage is 3,022 of 3,040 expected cycles. Percentiles are monotone in
+  every parsed period.
+- **Versions seen in the sample:** V4.0 until 2023-01-17, V4.1 from 2023-01-17
+  through winter 2023-24, V4.2 in winter 2024-25, V4.3 in winter 2025-26.
 - Consequence for the registered decision times (02:30, 08:30, 14:30, 20:30
   UTC): a cycle that lands a few minutes late is not yet available, and the
   previous major cycle, about six hours older, is the one a trader could

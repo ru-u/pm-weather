@@ -272,5 +272,52 @@ def nbm_parse(
     typer.echo(f"wrote {out}: {stats}")
 
 
+@app.command("climo-pull")
+def climo_pull(
+    start: str = typer.Option("1991-07-01", help="First date"),
+    end: str = typer.Option("2026-06-30", help="Last date"),
+    out: str = typer.Option("data/interim/climo/daily_snow.parquet", help="Output Parquet file"),
+) -> None:
+    """Daily snowfall history for every configured station (ACIS), for climatology."""
+    from datetime import date as _date
+    from pathlib import Path
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from pmw.utils.config import load_stations_config
+    from pmw.weather.acis import Acis
+
+    _setup_logging()
+    acis = Acis(timeout_s=180)
+    rows = []
+    for icao in sorted(load_stations_config().stations):
+        days = acis.snow(icao, _date.fromisoformat(start), _date.fromisoformat(end))
+        n_missing = sum(v.missing for v in days.values())
+        typer.echo(f"{icao}: {len(days)} days, {n_missing} missing")
+        for d, v in days.items():
+            rows.append(
+                {
+                    "station": icao,
+                    "date": d,
+                    "snow_in": None if v.missing else float(v.measurable),
+                    "trace": v.trace,
+                    "missing": v.missing,
+                }
+            )
+    schema = pa.schema(
+        [
+            ("station", pa.string()),
+            ("date", pa.date32()),
+            ("snow_in", pa.float32()),  # trace counts as 0.0 here; see `trace`
+            ("trace", pa.bool_()),
+            ("missing", pa.bool_()),
+        ]
+    )
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.Table.from_pylist(rows, schema=schema), out, compression="zstd")
+    typer.echo(f"wrote {out}: {len(rows)} station-days")
+
+
 if __name__ == "__main__":
     app()
