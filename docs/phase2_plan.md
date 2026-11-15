@@ -75,7 +75,7 @@ Original plan for this step:
 - Build per-station snowfall climatology from CLI/GHCN daily data
   (1991 to 2020 plus recent years), by day of year, as a distribution, not a mean.
 
-### Step 4. Turn NBM into a probability for each strike
+### Step 4. Turn NBM into a probability for each strike (DONE 2026-11-15: `src/pmw/models/nbm_composite.py`, `pmw p2a-forecasts`)
 
 For a contract "total snowfall over days D1..Dn is above K", at decision time t:
 
@@ -98,7 +98,7 @@ For a contract "total snowfall over days D1..Dn is above K", at decision time t:
 
 The climatology-only version of the same pipeline is the second baseline.
 
-### Step 5. Compare (the registered analysis)
+### Step 5. Compare (the registered analysis) (code DONE 2026-11-15: `src/pmw/eval/p2a_score.py`, `pmw p2a-score`)
 
 - Decision times: four per day, each a fixed lag after an NBM cycle.
 - Market probability: mid of the last hourly bid/ask candle that closed before

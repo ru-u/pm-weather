@@ -196,3 +196,10 @@ pulled. Raw station blocks are kept verbatim per UTC day under
 `data/raw/nbm/nbp/` with the S3 upload time of each file; the parsed table is
 `data/interim/nbm/nbp_periods.parquet`. Availability time is the S3 upload
 time when it is within 3 hours of the cycle, otherwise cycle + 2 hours.
+
+**D-030. P2A pipeline built test-first, scoring last.** Order: composite model
+with known-answer tests (single-period percentiles, Monte Carlo calibration,
+copula correlation, alignment, no-lookahead) -> stage 1 forecasts with an
+automated leakage check (0 violations in 41,723 rows) -> implementation
+clarifications written into the pre-registration -> scoring code with the
+registered synthetic runs (GO / NO GO / not GO as expected) -> real run.

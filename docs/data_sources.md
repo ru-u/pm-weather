@@ -154,6 +154,11 @@ Last reviewed: 2026-11-14.
   UTC): a cycle that lands a few minutes late is not yet available, and the
   previous major cycle, about six hours older, is the one a trader could
   actually have used. The join rule handles this by construction.
+- **NBS (short range) bulletin**: same archive (`blend_nbstx.tHHz`), 3-hourly
+  columns to 72 hours; `S06` is 6-hour snowfall in tenths of an inch, given every
+  other column. Station blocks drift by a few hundred bytes a day and sit at
+  different offsets at different cycle hours, so `pmw nbm-pull --product nbs`
+  searches a 24 KB window around the remembered offset per cycle hour.
 - The 12Z-to-12Z periods do NOT line up with a climate day (05Z to 05Z for
   Eastern stations). Handling that mismatch is part of the Phase 2 design.
 - **Version is in every block header** (`NBM V4.3 NBP GUIDANCE 1/25/2026 0100

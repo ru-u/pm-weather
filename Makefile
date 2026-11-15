@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-all lint format typecheck test check discover log log-test report \
-        settle-check nbm climo pull-data docker-build
+        settle-check nbm nbs p2a climo pull-data docker-build
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -47,6 +47,16 @@ nbm:  ## Pull and parse NBM probabilistic bulletins for the five sample winters 
 	for w in "2021-11-01 2022-03-31" "2022-11-01 2023-03-31" "2023-11-01 2024-03-31" "2024-11-01 2025-03-31" "2025-11-01 2026-03-31"; do \
 		set -- $$w; uv run pmw nbm-pull $$1 $$2; done
 	uv run pmw nbm-parse 2021-11-01 2026-03-31
+
+nbs:  ## Pull and parse NBM short-range bulletins (6-hour snowfall) for the five sample winters
+	for w in "2021-11-01 2022-03-31" "2022-11-01 2023-03-31" "2023-11-01 2024-03-31" "2024-11-01 2025-03-31" "2025-11-01 2026-03-31"; do \
+		set -- $$w; uv run pmw nbm-pull $$1 $$2 --product nbs; done
+	uv run pmw nbs-parse 2021-11-01 2026-03-31
+
+p2a:  ## Run experiment P2A end to end (needs make nbm nbs climo first)
+	uv run pmw obs-build
+	uv run pmw p2a-forecasts
+	uv run pmw p2a-score
 
 climo:  ## Pull 35 years of daily snowfall per station for climatology
 	uv run pmw climo-pull

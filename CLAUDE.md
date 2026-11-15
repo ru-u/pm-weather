@@ -55,6 +55,8 @@ make log            # run the market logger (local ./data unless PMW_S3_* set)
 make log-test       # 3 quick cycles for a smoke test
 make report         # daily logger report (yesterday UTC)
 make settle-check SERIES=all        # or one series, e.g. KXNYCSNOWM
+make nbm nbs climo  # pull and parse NBM bulletins and station climatology (resumable)
+make p2a            # experiment P2A: observed table, forecasts (no prices), scoring
 make pull-data      # copy the Railway bucket to ./data/bucket
 ```
 
@@ -75,7 +77,9 @@ src/pmw/
   logger/     discovery, schemas, buffer, runner, report
   settle/     snow.py (SNOWOVERTIME replication)
   features/   nbm_table.py (parsed NBM forecast periods)
-  models/ eval/ backtest/   (later phases, empty)
+  models/     nbm_composite.py (observed + NBM + climatology, Monte Carlo)
+  eval/       p2a.py (forecasts at decision times), p2a_score.py (registered scoring)
+  backtest/   (later phase, empty)
   utils/      timeutil, storage, config
 scripts/      pull_data.py, views.sql (DuckDB view layer)
 tests/        offline; fixtures are real saved responses
