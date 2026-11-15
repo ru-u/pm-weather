@@ -71,7 +71,7 @@ check_untyped_defs = true
 no_implicit_optional = true
 
 [[tool.mypy.overrides]]
-module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*"]
+module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "pandas", "pandas.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -81,3 +81,5 @@ markers = ["live: hits real external APIs (deselected by default; run with -m li
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/*" = ["E501"]  # analysis scripts print wide tables
+"tests/*" = ["E501"]  # table-shaped fixtures read better on one line
+"src/pmw/eval/p2a_score.py" = ["E501"]  # markdown table rows in the report writer

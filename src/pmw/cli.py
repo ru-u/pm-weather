@@ -386,5 +386,46 @@ def p2a_forecasts(
         raise typer.Exit(1)
 
 
+@app.command("p2a-score")
+def p2a_score(
+    forecasts: str = typer.Option("data/processed/p2a/forecasts.parquet"),
+    markets: str = typer.Option("data/raw/kalshi/prereg_design/markets.json"),
+    out_dir: str = typer.Option("data/processed/p2a"),
+    figure: str = typer.Option("docs/findings/figures/p2a_reliability.png"),
+    report: str = typer.Option("docs/findings/p2a_result_tables.md"),
+) -> None:
+    """P2A stage 2: join quotes and outcomes, score, simulate, apply the registered rule."""
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw.eval.p2a import load_sample
+    from pmw.eval.p2a_score import (
+        load_outcomes,
+        load_quotes,
+        report_markdown,
+        score_all,
+        window_ends,
+        write_outputs,
+    )
+    from pmw.utils.config import load_stations_config
+
+    _setup_logging()
+    events = load_sample(Path(markets), load_stations_config())
+    f = pd.read_parquet(forecasts)
+    q = load_quotes(Path(markets).parent, set(f["ticker"]))
+    r = score_all(f, q, load_outcomes(Path(markets)), window_ends(Path(markets), events))
+    write_outputs(r, Path(out_dir), Path(figure))
+    Path(report).write_text(
+        report_markdown(
+            r,
+            Path(figure).name
+            if Path(report).parent == Path(figure).parent
+            else "figures/" + Path(figure).name,
+        )
+    )
+    typer.echo(f"verdict: {r['verdict']}  primary: {r['primary']}")
+
+
 if __name__ == "__main__":
     app()
