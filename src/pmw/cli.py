@@ -319,5 +319,72 @@ def climo_pull(
     typer.echo(f"wrote {out}: {len(rows)} station-days")
 
 
+@app.command("obs-build")
+def obs_build(
+    climo: str = typer.Option("data/interim/climo/daily_snow.parquet"),
+    out: str = typer.Option("data/interim/obs/daily_snow_settlement.parquet"),
+) -> None:
+    """Observed daily snowfall at settlement stations (CLI, ACIS for gaps), winters 2021-2026."""
+    from pathlib import Path
+
+    from pmw.features.obs_table import build_observed
+
+    _setup_logging()
+    stations = ["KNYC", "KBOS", "KDCA", "KPHL", "KORD", "KDTW", "KSEA", "KSLC", "KDFW",
+                "KAUS", "KHOU", "KEWR", "KPVD"]  # fmt: skip
+    stats = build_observed(stations, list(range(2021, 2027)), Path(climo), Path(out))
+    typer.echo(f"wrote {out}: {stats}")
+
+
+@app.command("nbs-parse")
+def nbs_parse(
+    start: str = typer.Argument(...),
+    end: str = typer.Argument(...),
+    raw: str = typer.Option("data/raw/nbm"),
+    out: str = typer.Option("data/interim/nbm/nbs_s06.parquet"),
+) -> None:
+    """Parse pulled NBS blocks into a table of 6-hour snowfall forecasts."""
+    from datetime import date as _date
+    from pathlib import Path
+
+    from pmw.features.nbm_table import build_nbs_table
+    from pmw.utils.timeutil import date_range
+
+    _setup_logging()
+    days = date_range(_date.fromisoformat(start), _date.fromisoformat(end))
+    typer.echo(f"wrote {out}: {build_nbs_table(Path(raw), days, Path(out))}")
+
+
+@app.command("p2a-forecasts")
+def p2a_forecasts(
+    markets: str = typer.Option("data/raw/kalshi/prereg_design/markets.json"),
+    out: str = typer.Option("data/processed/p2a/forecasts.parquet"),
+    no_nbs: bool = typer.Option(False, help="Ignore NBS 6-hour shares (hours of overlap only)."),
+) -> None:
+    """P2A stage 1: NBM composite and climatology probabilities at every decision time.
+    Reads no prices and no outcomes."""
+    from pathlib import Path
+
+    from pmw.eval.p2a import build_forecasts, leakage_violations, load_sample
+    from pmw.utils.config import load_stations_config
+
+    _setup_logging()
+    events = load_sample(Path(markets), load_stations_config())
+    nbs = None if no_nbs else Path("data/interim/nbm/nbs_s06.parquet")
+    stats = build_forecasts(
+        events,
+        nbp_path=Path("data/interim/nbm/nbp_periods.parquet"),
+        nbs_path=nbs,
+        obs_path=Path("data/interim/obs/daily_snow_settlement.parquet"),
+        climo_path=Path("data/interim/climo/daily_snow.parquet"),
+        out=Path(out),
+    )
+    typer.echo(f"wrote {out}: {stats}")
+    leaks = leakage_violations(Path(out))
+    typer.echo(f"leakage check: {leaks}")
+    if leaks["forecast_not_yet_public"] or leaks["observation_not_yet_public"]:
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

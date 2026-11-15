@@ -1,5 +1,6 @@
 """NBM text bulletins: parser on real station blocks, fetcher against a fake S3."""
 
+import itertools
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
@@ -115,7 +116,7 @@ def test_fetcher_learns_offsets_once_then_uses_range_requests():
     assert fake.requests == ["full"] and [b.how for b in first] == ["full", "full"]
     assert parse_nbp_block(first[0].text).station == "KNYC"
     fake.requests.clear()
-    second = arc.fetch_cycle(c1 + timedelta(hours=6), ["KNYC", "KBOS"])
+    second = arc.fetch_cycle(c1 + timedelta(days=1), ["KNYC", "KBOS"])
     assert sorted(fake.requests) == ["range", "range"]
     assert [b.how for b in second] == ["range", "range"]
     assert second[0].text == first[0].text and second[1].text == first[1].text
@@ -127,9 +128,9 @@ def test_fetcher_recovers_when_offsets_move():
     arc = _archive(fake)
     c1 = datetime(2026, 1, 25, 1, tzinfo=UTC)
     arc.fetch_cycle(c1, ["KNYC", "KBOS"])
-    fake.body = b" " * 80 + b"\n" + fake.body  # the station list changed: everything shifts
+    fake.body = (b" " * 80 + b"\n") * 120 + fake.body  # station list changed: blocks move 9.7 KB
     fake.requests.clear()
-    blocks = arc.fetch_cycle(c1 + timedelta(hours=6), ["KNYC", "KBOS"])
+    blocks = arc.fetch_cycle(c1 + timedelta(days=1), ["KNYC", "KBOS"])
     assert "full" in fake.requests
     assert all(b.text is not None for b in blocks)
     assert parse_nbp_block(blocks[0].text).station == "KNYC"
@@ -152,7 +153,7 @@ def test_pull_day_is_resumable_and_round_trips(tmp_path):
     arc = _archive(fake)
     day = date(2026, 1, 25)
     blocks, missing = pull_day(arc, tmp_path, day, ["KNYC", "KBOS"], [0, 6])
-    assert (blocks, missing) == (4, 0)
+    assert (blocks, missing) == (4, 0)  # offsets are remembered per cycle hour
     rows = list(read_day(tmp_path, "nbp", day))
     assert len(rows) == 4 and {r["station"] for r in rows} == {"KNYC", "KBOS"}
     assert parse_nbp_block(rows[0]["text"]).periods
@@ -188,3 +189,33 @@ def test_table_rows_carry_availability_and_units(tmp_path):
     assert first["available_at"] == datetime(2026, 1, 25, 2, 9, tzinfo=UTC)
     assert all(r["available_at"] > r["cycle"] for r in rows)
     assert first["nbm_version"] == "V4.3"
+
+
+def test_parse_nbs_six_hour_snow():
+    from pmw.weather.nbm_text import parse_nbs_block
+
+    b = parse_nbs_block(_text("nbs_KNYC_2026012401.txt"))
+    assert (b.station, b.version) == ("KNYC", "V4.3")
+    assert b.issue == datetime(2026, 1, 24, 1, tzinfo=UTC)
+    ends = sorted(b.s06_in)
+    assert len(ends) == 11 and all(e.hour in (0, 6, 12, 18) for e in ends)
+    assert ends[0] == datetime(2026, 1, 24, 12, tzinfo=UTC)  # fhr 11
+    assert all((y - x).total_seconds() == 6 * 3600 for x, y in itertools.pairwise(ends))
+    # Row: 0 0 0 0 1 46 46 15 6 5 1 (tenths), for periods ending 12Z Jan 24 ... 12Z Jan 26 + 12h.
+    by_end = {e.strftime("%d %HZ"): v for e, v in b.s06_in.items()}
+    assert by_end["25 12Z"] == 0.1
+    assert by_end["25 18Z"] == 4.6 and by_end["26 00Z"] == 4.6  # the storm: 12Z Jan 25 to 00Z
+    assert by_end["26 06Z"] == 1.5 and by_end["27 00Z"] == 0.1
+
+
+def test_window_search_tracks_drifting_offsets():
+    fake = FakeS3()
+    arc = NbmTextArchive("nbs", workers=2, transport=httpx.MockTransport(fake))
+    c1 = datetime(2026, 1, 25, 1, tzinfo=UTC)
+    first = arc.fetch_cycle(c1, ["KNYC", "KBOS"])
+    fake.body = b"x" * 79 + b"\n" + b" " * 79 + b"\n" + fake.body  # blocks drift by 160 bytes
+    fake.requests.clear()
+    second = arc.fetch_cycle(c1 + timedelta(days=1), ["KNYC", "KBOS"])
+    assert fake.requests == ["range", "range"]  # found inside the window, no full download
+    assert [b.text for b in second] == [b.text for b in first]
+    assert arc.offsets[(1, "KBOS")][0] == 160  # the drift is remembered

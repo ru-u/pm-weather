@@ -117,6 +117,55 @@ window markets logged live from 2026-11 onward, once at least 12 storm events in
 at least 8 distinct calendar weeks have settled. Market quotes come from the
 logger's order books instead of hourly candles. Nothing is scored before then.
 
+### Implementation clarifications (2026-11-15, before any scoring)
+
+Details the frozen text leaves open, fixed while building the pipeline and
+before any market price was compared with any forecast or outcome. At this
+point stage 1 (forecasts only) had been run as a trial; no quote had been
+joined. These are not deviations.
+
+1. **Market quote.** The hourly candle ending at the top of the hour before the
+   decision time (the 14:00 candle for 14:30), its closing YES bid and ask. No
+   candle for that hour means no observation. This is the reading used in the
+   design analysis.
+2. **When an observation counts as public.** A climate day's snowfall is usable
+   8 hours after the climate day ends (about 8 AM local the next morning).
+   Only an unbroken prefix of the window is treated as observed.
+3. **NBM forecast used.** For each 24-hour period, the most recent cycle whose
+   `available_at` is strictly before the decision time (`available_at` = S3
+   upload time if within 3 hours of the cycle, else cycle + 2 hours).
+4. **Per-period distribution.** Piecewise-linear quantile function through
+   (0, 0) and the five percentiles; exponential tail above the 90th with scale
+   (q90 - q75) / ln 2.5, floored at 0.1 in.
+5. **Climatology.** Whole-season resampling (all days of a draw come from one
+   historical season), from seasons strictly before the contract's season,
+   station history from ACIS since 1991-07. A missing station-day is filled
+   from the same calendar day in another season.
+6. **Strike rounding.** "Strictly greater than K" with totals reported to
+   0.1 in is evaluated as a continuous total of at least K + 0.05.
+7. **Determined observations** (excluded): observed snowfall public at t
+   already exceeds the strike, or the whole window is observed.
+8. **Log loss** uses probabilities clipped to [0.01, 0.99] for every forecast
+   (market, NBM, climatology). Brier scores are unclipped.
+9. **Strata.** Lead time = end of the contract window minus the decision time.
+   NBM version = the versions of the forecasts used at that decision time,
+   "mixed" when more than one.
+10. **Taker simulation sizing.** 10% of the decision hour's traded volume (from
+    the same hourly candle), at most 250 contracts per market per UTC day and
+    1,000 per event per UTC day, filled at the candle's closing ask (YES) or bid
+    (NO), Kalshi taker fees from `pmw.markets.fees` (quadratic, multiplier 1),
+    one position per market per UTC day, held to settlement. Within an event and
+    decision time, the largest perceived edge is filled first.
+11. **P&L bootstrap.** The same weekly blocks as the Brier metric (every week
+    with at least one observation; weeks without trades contribute zero),
+    10,000 resamples, seed 20261115.
+12. **Sensitivity rule** (already registered): if the sign of D at spread 0.10
+    or 0.30 differs from the primary, the outcome is CONDITIONAL. The
+    independent-days NBM variant is reported, not decisive.
+13. **Synthetic check.** Before the real run, the scoring code is run on
+    synthetic data where NBM is truth and the market noisy, and the reverse,
+    and must return GO and NO GO respectively.
+
 ---
 
 ## Experiment P2B: NBM calibration against CLI snowfall (no prices)

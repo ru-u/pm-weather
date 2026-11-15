@@ -168,6 +168,38 @@ def parse_nbp_block(text: str) -> NbpBlock:
     return NbpBlock(station=station, version=version, issue=issue, fhrs=fhrs, periods=periods)
 
 
+@dataclass(frozen=True)
+class NbsBlock:
+    """Short-range (NBS) block: only what the composite needs, 6-hour snowfall."""
+
+    station: str
+    version: str
+    issue: datetime
+    s06_in: dict[datetime, float | None]  # end of each 6-hour period -> inches
+
+
+def parse_nbs_block(text: str) -> NbsBlock:
+    """Parse one NBS block. Values are 3-character fields right-aligned under the FHR
+    column they belong to (fields can touch, e.g. "57100100"), so slice by position."""
+    lines = [ln.rstrip("\n") for ln in text.split("\n") if ln.strip()]
+    station, version, product, issue = parse_header(lines[0])
+    if product != "NBS":
+        raise ValueError(f"expected an NBS block, got {product}")
+    fhr_line = next((ln for ln in lines if ln.lstrip().startswith("FHR")), None)
+    if fhr_line is None:
+        raise ValueError(f"no FHR line in block for {station}")
+    columns = [(m.end(), int(m.group())) for m in re.finditer(r"\d+", fhr_line)]
+    s06_line = next((ln for ln in lines if ln[:LABEL_WIDTH].strip() == "S06"), "")
+    s06: dict[datetime, float | None] = {}
+    for end, fhr in columns:
+        field_text = s06_line[max(end - 3, LABEL_WIDTH) : end]
+        if not field_text.strip():
+            continue  # S06 is only given every other column (6-hourly)
+        n = _num(field_text)
+        s06[issue + timedelta(hours=fhr)] = None if n is None else n / 10.0
+    return NbsBlock(station=station, version=version, issue=issue, s06_in=s06)
+
+
 def split_blocks(data: bytes) -> dict[str, tuple[int, int]]:
     """Station -> (offset, length) for every block in a full bulletin file."""
     heads = [(m.start(), m.group(1).decode()) for m in _ANY_HEADER_RE.finditer(data)]
@@ -198,6 +230,7 @@ class NbmTextArchive:
         product: str = "nbp",
         *,
         workers: int = 12,
+        search_bytes: int | None = None,
         timeout_s: float = 120.0,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
@@ -205,13 +238,19 @@ class NbmTextArchive:
             raise ValueError(f"unknown product {product}")
         self.product = product
         self.workers = workers
+        # NBP offsets are fixed; NBS offsets drift, so search a window around them.
+        self.search_bytes = (
+            (0 if product == "nbp" else 24_000) if search_bytes is None else search_bytes
+        )
         self._client = httpx.Client(
             timeout=timeout_s,
             headers={"User-Agent": "pmw-research/0.1"},
             transport=transport,
             limits=httpx.Limits(max_connections=workers + 2),
         )
-        self.offsets: dict[str, tuple[int, int]] = {}  # last known station offsets
+        # Last known (offset, length) per (cycle hour, station). NBS files list stations
+        # in a different order at different cycle hours, so offsets are per hour.
+        self.offsets: dict[tuple[int, str], tuple[int, int]] = {}
         self.full_downloads = 0
         self.range_requests = 0
 
@@ -238,13 +277,19 @@ class NbmTextArchive:
         raw = resp.headers.get("last-modified")
         return parsedate_to_datetime(raw).astimezone(UTC) if raw else None
 
-    def _range(self, url: str, station: str) -> tuple[str | None, datetime | None, int]:
-        """Try the remembered offset. Returns (block text or None, last-modified, status)."""
-        offset, length = self.offsets[station]
+    def _range(self, url: str, hour: int, station: str) -> tuple[str | None, datetime | None, int]:
+        """Fetch a window around the remembered offset and find the station's block in it.
+
+        Returns (block text or None, last-modified, status). NBP blocks sit at the
+        same offset every cycle; NBS blocks drift by a few hundred bytes a day, so
+        the window is widened by `search_bytes` on each side and the found offset
+        is remembered, which tracks the drift.
+        """
+        offset, length = self.offsets[(hour, station)]
+        start = max(0, offset - self.search_bytes)
+        stop = offset + max(length, RANGE_BYTES) + self.search_bytes - 1
         self.range_requests += 1
-        resp = self._get(
-            url, headers={"Range": f"bytes={offset}-{offset + max(length, RANGE_BYTES) - 1}"}
-        )
+        resp = self._get(url, headers={"Range": f"bytes={start}-{stop}"})
         if resp.status_code == 404:
             return None, None, 404
         if resp.status_code == 416:
@@ -253,10 +298,20 @@ class NbmTextArchive:
             resp.raise_for_status()
         data = resp.content
         heads = list(_ANY_HEADER_RE.finditer(data))
-        if not heads or heads[0].start() != 0 or heads[0].group(1).decode() != station:
-            return None, self._last_modified(resp), 409  # offsets moved
-        end = heads[1].start() if len(heads) > 1 else len(data)
-        return data[:end].decode("ascii", "replace"), self._last_modified(resp), 206
+        for k, m in enumerate(heads):
+            if m.group(1).decode() != station:
+                continue
+            if k + 1 < len(heads):
+                end = heads[k + 1].start()
+            elif start + len(data) >= int(
+                resp.headers.get("content-range", "/0").rsplit("/", 1)[-1] or 0
+            ):
+                end = len(data)  # last block in the file
+            else:
+                break  # block runs past the window: treat as moved
+            self.offsets[(hour, station)] = (start + m.start(), end - m.start())
+            return data[m.start() : end].decode("ascii", "replace"), self._last_modified(resp), 206
+        return None, self._last_modified(resp), 409  # not in the window: offsets moved
 
     def _full(self, url: str) -> tuple[bytes | None, datetime | None]:
         self.full_downloads += 1
@@ -268,13 +323,14 @@ class NbmTextArchive:
 
     def fetch_cycle(self, cycle: datetime, stations: list[str]) -> list[FetchedBlock]:
         url = bulletin_url(self.product, cycle)
-        known = [s for s in stations if s in self.offsets]
+        hour = cycle.hour
+        known = [s for s in stations if (hour, s) in self.offsets]
         results: dict[str, FetchedBlock] = {}
         moved = len(known) < len(stations)
         if known:
             with ThreadPoolExecutor(max_workers=self.workers) as pool:
                 for station, (text, lm, status) in zip(
-                    known, pool.map(lambda s: self._range(url, s), known), strict=True
+                    known, pool.map(lambda s: self._range(url, hour, s), known), strict=True
                 ):
                     if status == 206 and text is not None:
                         results[station] = FetchedBlock(station, cycle, lm, text, "range")
@@ -290,7 +346,7 @@ class NbmTextArchive:
                     results.setdefault(s, FetchedBlock(s, cycle, None, None, "missing"))
             else:
                 blocks = split_blocks(data)
-                self.offsets.update({s: blocks[s] for s in stations if s in blocks})
+                self.offsets.update({(hour, s): blocks[s] for s in stations if s in blocks})
                 for s in stations:
                     if s in results and results[s].how == "range":
                         continue

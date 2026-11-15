@@ -89,3 +89,56 @@ def build_table(root: Path, days: list[date], out: Path) -> dict[str, int]:
     out.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(pa.Table.from_pylist(rows, schema=SCHEMA), out, compression="zstd")
     return stats
+
+
+NBS_SCHEMA = pa.schema(
+    [
+        ("station", pa.string()),
+        ("cycle", _TS),
+        ("last_modified", _TS),
+        ("available_at", _TS),
+        ("nbm_version", pa.string()),
+        ("valid_end", _TS),  # end of the 6-hour period
+        ("s06_in", pa.float32()),
+    ]
+)
+
+
+def build_nbs_table(root: Path, days: list[date], out: Path) -> dict[str, int]:
+    """Parse pulled NBS blocks into one Parquet file of 6-hour snowfall forecasts."""
+    from pmw.weather.nbm_text import parse_nbs_block
+
+    rows: list[dict[str, Any]] = []
+    stats = {"days_present": 0, "days_absent": 0, "rows": 0, "failed_blocks": 0}
+    for day in days:
+        if not day_path(root, "nbs", day).exists():
+            stats["days_absent"] += 1
+            continue
+        stats["days_present"] += 1
+        for rec in read_day(root, "nbs", day):
+            text = rec.get("text")
+            if not isinstance(text, str):
+                continue
+            try:
+                block = parse_nbs_block(text)
+            except ValueError:
+                stats["failed_blocks"] += 1
+                continue
+            lm_raw = rec.get("last_modified")
+            lm = datetime.fromisoformat(lm_raw) if isinstance(lm_raw, str) else None
+            for end, value in block.s06_in.items():
+                rows.append(
+                    {
+                        "station": block.station,
+                        "cycle": block.issue,
+                        "last_modified": lm,
+                        "available_at": available_at(block.issue, lm),
+                        "nbm_version": block.version,
+                        "valid_end": end,
+                        "s06_in": value,
+                    }
+                )
+    stats["rows"] = len(rows)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.Table.from_pylist(rows, schema=NBS_SCHEMA), out, compression="zstd")
+    return stats
