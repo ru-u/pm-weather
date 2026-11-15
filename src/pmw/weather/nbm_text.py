@@ -260,7 +260,9 @@ class NbmTextArchive:
     def _get(self, url: str, headers: dict[str, str] | None = None) -> httpx.Response:
         """GET with retries on dropped connections and 5xx (a long pull must survive blips)."""
         last: Exception | None = None
-        for attempt in range(5):
+        # 1, 2, 4, ... capped at 60 s: about 10 minutes in all, enough to ride out a
+        # laptop losing DNS or Wi-Fi for a few minutes (seen 2026-11-15).
+        for attempt in range(14):
             try:
                 resp = self._client.get(url, headers=headers)
                 if resp.status_code < 500:
@@ -268,7 +270,7 @@ class NbmTextArchive:
                 last = httpx.HTTPStatusError("server error", request=resp.request, response=resp)
             except httpx.TransportError as exc:
                 last = exc
-            time.sleep(min(30.0, 2.0**attempt))
+            time.sleep(min(60.0, 2.0**attempt))
         assert last is not None
         raise last
 
