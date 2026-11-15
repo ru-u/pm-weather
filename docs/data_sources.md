@@ -123,6 +123,24 @@ Last reviewed: 2026-11-14.
     24-hour periods **ending 12Z**, out to about 9.5 days.
   - **NBS** (short range): `S06` 6-hour snowfall, `PSN/PZR/PPL/PRA`
     precipitation-type probabilities, `P06/P12`, `Q06/Q12`, 3-hourly temperature.
+- **Only the 01Z, 07Z, 13Z and 19Z cycles carry the 24-hour percentiles.** An
+  NBP file exists for every hour, but at other hours a station block holds only
+  wind and pressure rows (or nothing). Verified on 2026-01-24.
+- **Layout is fixed-width, 80 columns, and a station sits at the same byte
+  offset in every cycle** until the station list or version changes (3,807
+  bytes per CONUS station in V4.3, 2,997 in V4.0). `pmw nbm-pull` therefore
+  fetches each station with one 4 KB Range request and downloads a whole file
+  only to relearn offsets: ten days of 21 stations take about 18 seconds.
+- **Upload lag.** The S3 `Last-Modified` of these four cycles is normally 68 to
+  101 minutes after the cycle (01Z at about 02:09 to 02:41, 13Z at about 14:08
+  to 14:36). Some days were uploaded many hours late in one batch
+  (2026-01-25), so `Last-Modified` is trusted as availability only within 3
+  hours of the cycle; otherwise cycle + 2 hours is used
+  (`pmw.weather.nbm_text.available_at`).
+- Consequence for the registered decision times (02:30, 08:30, 14:30, 20:30
+  UTC): a cycle that lands a few minutes late is not yet available, and the
+  previous major cycle, about six hours older, is the one a trader could
+  actually have used. The join rule handles this by construction.
 - The 12Z-to-12Z periods do NOT line up with a climate day (05Z to 05Z for
   Eastern stations). Handling that mismatch is part of the Phase 2 design.
 - **Version is in every block header** (`NBM V4.3 NBP GUIDANCE 1/25/2026 0100

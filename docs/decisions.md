@@ -181,3 +181,18 @@ last season's rules.
 are parsed from each market's own rules when stated. A market whose rules name
 a station that is not in `configs/stations.yaml` raises an error instead of
 falling back to a default.
+
+## 2026-11-15
+
+**D-028. Logger hardened after the first night.** Every order-book stage
+succeeded (851 of 851) but the market-snapshot call was rate-limited out 11
+times: Railway's egress IP is shared and Kalshi limits by IP. Market snapshots
+now keep the batches that worked, retries back off for up to about 50 seconds,
+and pacing is 0.75 s per request. Redeployed 06:56 UTC.
+
+**D-029. NBM comes from archived station text, by Range request.** Only the
+01/07/13/19Z cycles carry the 24-hour snow percentiles, so only those are
+pulled. Raw station blocks are kept verbatim per UTC day under
+`data/raw/nbm/nbp/` with the S3 upload time of each file; the parsed table is
+`data/interim/nbm/nbp_periods.parquet`. Availability time is the S3 upload
+time when it is within 3 hours of the cycle, otherwise cycle + 2 hours.

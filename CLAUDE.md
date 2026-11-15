@@ -70,11 +70,12 @@ configs/      series.yaml (discovery filters), stations.yaml, logger.yaml
 docs/         decisions, preregistration, settlement_rules, data_sources, deploy, findings/
 src/pmw/
   markets/    kalshi.py (public client), fees.py
-  weather/    iem_cli.py (NWS CLI via IEM), acis.py (second source); nbm/hrrr/... to come
+  weather/    iem_cli.py (NWS CLI via IEM), acis.py (second source), nbm_text.py (NBM bulletins)
   energy/     ERCOT (Phase 3)
   logger/     discovery, schemas, buffer, runner, report
   settle/     snow.py (SNOWOVERTIME replication)
-  features/ models/ eval/ backtest/   (later phases, empty)
+  features/   nbm_table.py (parsed NBM forecast periods)
+  models/ eval/ backtest/   (later phases, empty)
   utils/      timeutil, storage, config
 scripts/      pull_data.py, views.sql (DuckDB view layer)
 tests/        offline; fixtures are real saved responses
@@ -129,6 +130,12 @@ data/         gitignored: raw/ interim/ processed/ live/
   "Actual System Load by Forecast Zone" report (NP6-346-CD) for the operating
   day. Hourly averages, not 5-minute readings. The event ticker's date is the
   day AFTER the operating day (`KXTXERCOTPEAKD-26NOV15` is about Nov 14).
+
+**NBM**
+- Station text bulletins are archived per cycle on AWS; `pmw nbm-pull` and
+  `pmw nbm-parse` fetch and parse them. Only the 01/07/13/19Z cycles carry the
+  24-hour snow percentiles (`S24P1/2/5/7/9`, tenths of an inch, periods ending
+  12Z). Join on `available_at`, never on the cycle time.
 
 **Statistics**
 - Snow outcomes are clustered: one storm moves several cities, and all strikes

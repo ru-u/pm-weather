@@ -54,7 +54,7 @@ NBM station guidance (plus climatology where NBM does not reach)?
   market that cannot be reproduced is listed with a reason and excluded before
   step 4, not after.
 
-### Step 3. NBM station forecasts, issue-time aware (two to three days)
+### Step 3. NBM station forecasts, issue-time aware (pull and parser DONE 2026-11-15; climatology still to do)
 
 - Download NBP and NBS text bulletins for the settlement stations, for every
   cycle in each market's life, from `noaa-nbm-grib2-pds`. Keep only our station

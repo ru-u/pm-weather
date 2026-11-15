@@ -215,5 +215,62 @@ def settle_check(
         raise typer.Exit(1)
 
 
+@app.command("nbm-pull")
+def nbm_pull(
+    start: str = typer.Argument(..., help="First UTC date, YYYY-MM-DD"),
+    end: str = typer.Argument(..., help="Last UTC date, YYYY-MM-DD"),
+    product: str = typer.Option("nbp", help="nbp (probabilistic) or nbs (short range)"),
+    hours: str = typer.Option(
+        "1,7,13,19", help="Cycle hours (UTC). Only 01/07/13/19Z carry the 24-hour percentiles."
+    ),
+    out: str = typer.Option("data/raw/nbm", help="Output root"),
+) -> None:
+    """Download archived NBM text blocks for the configured stations (resumable per day)."""
+    from datetime import date as _date
+    from pathlib import Path
+
+    from pmw.utils.config import load_stations_config
+    from pmw.utils.timeutil import date_range
+    from pmw.weather.nbm_text import NbmTextArchive, pull_day
+
+    _setup_logging()
+    stations = sorted(load_stations_config().stations)
+    hour_list = [int(h) for h in hours.split(",")]
+    archive = NbmTextArchive(product)
+    root = Path(out)
+    total = missing = 0
+    days = date_range(_date.fromisoformat(start), _date.fromisoformat(end))
+    for done, day in enumerate(days, 1):
+        b, m = pull_day(archive, root, day, stations, hour_list)
+        total += b
+        missing += m
+        if done % 10 == 0 or done == len(days):
+            typer.echo(
+                f"{day}  {done}/{len(days)} days  blocks={total} missing={missing} "
+                f"range_requests={archive.range_requests} full_downloads={archive.full_downloads}"
+            )
+    archive.close()
+
+
+@app.command("nbm-parse")
+def nbm_parse(
+    start: str = typer.Argument(..., help="First UTC date, YYYY-MM-DD"),
+    end: str = typer.Argument(..., help="Last UTC date, YYYY-MM-DD"),
+    raw: str = typer.Option("data/raw/nbm", help="Root of pulled bulletins"),
+    out: str = typer.Option("data/interim/nbm/nbp_periods.parquet", help="Output Parquet file"),
+) -> None:
+    """Parse pulled NBP blocks into one table of 24-hour forecast periods."""
+    from datetime import date as _date
+    from pathlib import Path
+
+    from pmw.features.nbm_table import build_table
+    from pmw.utils.timeutil import date_range
+
+    _setup_logging()
+    days = date_range(_date.fromisoformat(start), _date.fromisoformat(end))
+    stats = build_table(Path(raw), days, Path(out))
+    typer.echo(f"wrote {out}: {stats}")
+
+
 if __name__ == "__main__":
     app()

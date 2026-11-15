@@ -160,6 +160,32 @@ stations:
     series: [KXHOUSNOWM]
     verified: rules-2025-26
 
+  # --- Stations named in this season's rule text (2026-27) -------------------
+  KPVD:
+    name: Providence, T.F. Green
+    icao: KPVD
+    cli_id: KPVD
+    cli_product: CLIPVD
+    wfo: BOX
+    lat: 41.7225
+    lon: -71.4325
+    tz: America/New_York
+    std_utc_offset_hours: -5
+    series: []
+    verified: rules-2026-27 (KXSNOWCITIES-26NOV15 names KPVD)
+  KEWR:
+    name: Newark Liberty
+    icao: KEWR
+    cli_id: KEWR
+    cli_product: CLIEWR
+    wfo: OKX
+    lat: 40.6895
+    lon: -74.1745
+    tz: America/New_York
+    std_utc_offset_hours: -5
+    series: []
+    verified: rules-2026-27 (KXLOWTPERIOD names Newark; snow use unconfirmed)
+
 # Series with open markets but NO confirmed station yet (new this season, so no
 # settled rule text to read): KXDENSNOWM, KXMKESNOWM, KXMSPSNOWM, KXPITSNOWM,
 # KXTTNSNOWM. Confirm on the TWC dashboard before adding them here.
