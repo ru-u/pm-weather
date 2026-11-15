@@ -203,3 +203,11 @@ copula correlation, alignment, no-lookahead) -> stage 1 forecasts with an
 automated leakage check (0 violations in 41,723 rows) -> implementation
 clarifications written into the pre-registration -> scoring code with the
 registered synthetic runs (GO / NO GO / not GO as expected) -> real run.
+
+**D-031. P2A result: CONDITIONAL; snow modeling is gated on P2B.** The market
+was more accurate than the free NBM composite (D = -0.0103, CI excludes zero,
+same sign in every registered variant); the naive taker strategy made +$508 on
+33,653 contracts with an interval spanning zero and a perceived-vs-realized
+edge correlation of 0.04. As registered: no Phase 4 snow model unless P2B finds
+a specific NBM weakness. Priorities now: (1) ERCOT go/no-go (Phase 3),
+(2) P2B, (3) keep logging for the prospective storm-window test P2A-S.

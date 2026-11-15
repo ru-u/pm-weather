@@ -153,11 +153,11 @@ data/         gitignored: raw/ interim/ processed/ live/
 1. Live logger. Kalshi book, market and trade logging is deployed on Railway
    and running since 2026-11-14 16:12 UTC. NBM forecast snapshots, ERCOT
    forecast snapshots and Polymarket (read-only) logging still to do.
-2. Historical snow go/no-go: do Kalshi snow prices beat, match or lose to free
-   NBM guidance at matched timestamps? Plan in `docs/phase2_plan.md`, rule in
-   `docs/preregistration.md` (frozen 2026-11-14; changes are logged deviations).
-   History can only test monthly markets. Storm-window markets (42% of last
-   winter's volume, six events) are tested prospectively on live-logged data.
+2. Historical snow go/no-go: DONE 2026-11-15, CONDITIONAL. The market was more
+   accurate than the NBM composite (D = -0.010, CI excludes 0); taker P&L noise.
+   Snow modeling only if P2B finds a specific NBM weakness. Storm windows are
+   tested prospectively on live-logged data (P2A-S). Do not re-run or retune P2A:
+   it is done; anything further is a new, separately registered experiment.
 3. ERCOT go/no-go (needs volume of about $20k/day on stressed days as well).
 4. Modeling, only if a gate passes.
 5. Paper trading, then tiny live with hard caps and a kill switch, only on

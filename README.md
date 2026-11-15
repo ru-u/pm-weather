@@ -8,8 +8,8 @@ market properly, replicate settlement exactly, pre-register the test, and
 compare the market's prices against free public forecasts before building any
 model.
 
-Status (2026-11-14): market logger live, settlement checks under way, first
-experiment pre-registered. No model, no trading.
+Status (2026-11-15): market logger live; first pre-registered experiment run
+(the market beat the free forecast). No model, no trading.
 
 ## Why these markets
 
@@ -49,6 +49,15 @@ timestamp, is the market's probability better or worse than the free forecast?**
   markets) were recomputed from official NWS daily snowfall. 389 reproduce
   Kalshi's result and none contradict it. The remaining 7 belong to one Chicago
   event that Kalshi itself unwound, and are excluded from analysis.
+- **First pre-registered test: the market beat the free forecast.** Across 16,268
+  matched observations (382 markets, 2021 to 2026), Kalshi's snow prices were
+  more accurate than a probability built from the National Blend of Models plus
+  observed snow and climatology: Brier score 0.148 against 0.158, difference
+  -0.010 with a 95% block-bootstrap interval of [-0.017, -0.003]. A naive
+  strategy trading NBM against the quote made +$508 on 33,653 contracts after
+  fees, statistically indistinguishable from zero. Free guidance is priced in.
+  Under the registered rule the result is CONDITIONAL: any snow model must first
+  beat NBM out of sample.
 - **The sample is small.** Kalshi has roughly 62 settled city-months and 6
   storm windows of snow history, heavily clustered. One winter of market data
   cannot prove a small edge, so the forecast itself is validated separately on
@@ -57,7 +66,7 @@ timestamp, is the market's probability better or worse than the free forecast?**
   of the NWS in the settlement hierarchy. The logger versions every market's
   rule text for exactly this reason.
 
-Details: [`docs/findings/`](docs/findings/).
+Details: [`docs/findings/`](docs/findings/), especially the [P2A result](docs/findings/2026-11-15-p2a-result.md).
 
 ## What is built
 
@@ -96,7 +105,7 @@ make settle-check SERIES=KXNYCSNOWM
 | - | - | - |
 | 0 | Scaffold, environment, conventions | done |
 | 1 | Live market logging | running since 2026-11-14 |
-| 2 | Do snow prices beat NBM guidance? | pre-registered, not yet run |
+| 2 | Do snow prices beat NBM guidance? | done: no, the market is more accurate (CONDITIONAL) |
 | 3 | Do ERCOT demand prices beat ERCOT's own forecast? | not started |
 | 4 | Distributional snowfall and load models | only if a gate passes |
 | 5 | Paper trading, then small live with hard limits | only on explicit approval |

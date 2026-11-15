@@ -7,7 +7,7 @@ logged at the bottom with a date and a reason.
 
 ## Experiment P2A: Kalshi snow market versus NBM guidance
 
-**Status: FROZEN 2026-11-14. Not yet run.** The owner delegated the three open
+**Status: FROZEN 2026-11-14. RUN 2026-11-15: CONDITIONAL (see Results).** The owner delegated the three open
 design choices to analysis ("do the research and figure out the optimal"); they
 are resolved below and in `docs/findings/2026-11-14-prereg-design.md`. From here
 on, any change is a deviation and is logged at the bottom.
@@ -179,6 +179,12 @@ split by NBM version. Test winter held out: 2025-26, touched once.
 
 ---
 
+## Results
+
+- **P2A, run 2026-11-15 21:04 UTC: CONDITIONAL.** D = -0.0103 [-0.0167, -0.0029]
+  (the market was more accurate than the NBM composite); taker P&L positive in
+  62.9% of resamples. See `docs/findings/2026-11-15-p2a-result.md`.
+
 ## Deviations
 
-None yet.
+None.
