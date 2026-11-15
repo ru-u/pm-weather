@@ -6,9 +6,12 @@ kalshi:
   # Unauthenticated limits are not published ("separate limits", back off on 429).
   # Measured 2026-11-14: about 8 requests/second from one IP starts returning 429.
   # A base cycle needs roughly 15 requests, so 2 requests/second is plenty.
-  min_request_interval_s: 0.5
+  # On Railway the egress IP is shared with other tenants, and Kalshi limits by
+  # IP: the first night saw 429s on about 4% of market-snapshot calls even at
+  # 2 requests/second. Slower pacing plus longer backoff costs nothing here.
+  min_request_interval_s: 0.75
   timeout_s: 20
-  max_attempts: 6
+  max_attempts: 7
   user_agent: pmw-research-logger/0.1
 
 cadence:

@@ -160,3 +160,28 @@ def test_window_and_boundary_helpers():
     assert _in_window(datetime(2026, 1, 1, 0, 10, tzinfo=UTC), [("23:30", "00:30")])  # wraps
     assert _next_boundary(1000.0, 300) == 1200
     assert _next_boundary(1200.0, 300) == 1500  # strictly after
+
+
+def test_market_snapshot_keeps_batches_that_worked(tmp_path):
+    logger, fake = _logger(tmp_path)
+    logger.run_discovery()
+    calls = {"n": 0}
+    real = fake.markets
+
+    def flaky(*, tickers):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("Kalshi 429 on /markets")
+        return real(tickers=tickers)
+
+    fake.markets = flaky  # type: ignore[method-assign]
+    import pmw.logger.runner as runner_mod
+
+    runner_mod.MARKETS_BATCH, saved = 1, runner_mod.MARKETS_BATCH  # one ticker per batch
+    try:
+        assert logger.snapshot_markets() is True  # one batch failed, one worked
+    finally:
+        runner_mod.MARKETS_BATCH = saved
+    assert len(logger.buffers._rows["markets"]) == 1
+    health = [r for r in logger.buffers._rows["health"] if r["kind"] == "markets"][-1]
+    assert health["n_ok"] == 1 and health["n_err"] == 1 and "429" in health["note"]

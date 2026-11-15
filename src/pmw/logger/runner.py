@@ -20,6 +20,7 @@ import sys
 import time
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from typing import Any
 
 import httpx
 import pyarrow as pa
@@ -37,6 +38,7 @@ log = logging.getLogger(__name__)
 SETTLED_STATUS = {"finalized", "settled", "determined"}
 MAX_SEEN_TRADE_IDS = 200_000
 KEEP_CLOSED_DAYS = 10
+MARKETS_BATCH = 100
 # Discovery takes about a minute. Start it 150 s after the interval boundary so
 # it never delays the base snapshot that lands on the hour.
 DISCOVERY_OFFSET_S = 150
@@ -276,11 +278,21 @@ class MarketLogger:
         if not tickers:
             return True
         started = time.monotonic()
-        try:
-            markets = self.client.markets(tickers=tickers)
-        except Exception as exc:
-            log.warning("market snapshot failed: %s", exc)
-            self._health("markets", started, len(tickers), 0, len(tickers), str(exc))
+        # One request per 100 tickers. A batch that is rate-limited out must not
+        # throw away the batches that worked.
+        markets: list[dict[str, Any]] = []
+        failed = 0
+        last_error = ""
+        for i in range(0, len(tickers), MARKETS_BATCH):
+            chunk = tickers[i : i + MARKETS_BATCH]
+            try:
+                markets.extend(self.client.markets(tickers=chunk))
+            except Exception as exc:
+                failed += len(chunk)
+                last_error = str(exc)
+                log.warning("market snapshot batch failed: %s", exc)
+        if not markets:
+            self._health("markets", started, len(tickers), 0, len(tickers), last_error)
             return False
         now = utcnow()
         lookback = int(self.cfg.trades.startup_lookback_h * 3600)
@@ -305,7 +317,7 @@ class MarketLogger:
                         seconds=self.cfg.hot.volume_hot_hold_s
                     )
             self._last_volume[m.ticker] = volume
-        self._health("markets", started, len(tickers), len(markets), len(tickers) - len(markets))
+        self._health("markets", started, len(tickers), len(markets), failed, last_error)
         return True
 
     def _queue_trades(self, ticker: str, min_ts: int) -> None:

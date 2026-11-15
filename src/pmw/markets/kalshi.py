@@ -89,7 +89,8 @@ class KalshiPublic:
         self._get = retry(
             retry=retry_if_exception(_is_retryable),
             stop=stop_after_attempt(max_attempts),
-            wait=wait_exponential(multiplier=0.5, max=30),
+            # 1, 2, 4, 8, 16, 20 s: rides out the rate-limit bursts seen from shared cloud IPs.
+            wait=wait_exponential(multiplier=1.0, max=20),
             before_sleep=_log_retry,
             reraise=True,
         )(self._get_once)
