@@ -14,7 +14,8 @@ Outputs under data/interim/ercot/:
   forecast_peaks.parquet     one row per (posting, delivery day, model): forecast daily
                              peak; model INUSE (in_use = True) is the hour-by-hour
                              flagged model, which is what P3A uses
-  forecast_hourly.parquet    hourly SystemTotal of the in-use model, per posting
+  forecast_hourly.parquet    hourly SystemTotal of the in-use model, per posting, for the
+                             posting day and the next day only
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ import pyarrow.parquet as pq
 
 from pmw.energy.ercot import (
     ACTUAL_LOAD_BY_FORECAST_ZONE,
+    CENTRAL,
     FZN_ZONES,
     IN_USE,
     LOAD_FORECAST_BY_WEATHER_ZONE,
@@ -195,8 +197,10 @@ def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
                     "peak": float(peak),
                 }
             )
+        post_day = d.post_utc.astimezone(CENTRAL).date()
         for r in rows:
-            if r.in_use:
+            # Hourly detail only for the posting day and the next (the trading horizon).
+            if r.in_use and 0 <= (r.delivery_day - post_day).days <= 1:
                 hourly_rows.append(
                     {
                         "doc_id": d.doc_id,
