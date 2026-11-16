@@ -250,3 +250,11 @@ contracts per event, but 21 to 1,094 per day on Nov 10 to 14).
 `ERCOT_PUBLIC_API_SUBSCRIPTION_KEY` from `.env` with `railway variable set`,
 without printing values. The secondary key stays off Railway. `logger` and
 `daily-report` never get ERCOT credentials.
+
+**D-036. ERCOT settlement replication passes: 1,334 of 1,334.** NP6-346-CD was
+backfilled on `ercot-jobs` (3,425 documents, 229 requests, 2017-06-29 to
+2026-11-14), pulled with the logger's bucket credentials, and built locally.
+Every settled KXTXERCOTPEAKD market reproduces; Kalshi's recorded values match
+ours at their displayed precision (5 days are shown truncated or rounded). The
+settlement gate (rule 6) is met for the P3A sample. NP3-565-CD forecasts are
+backfilled for postings at 23, 05, 09, 13 and 16 CT only.

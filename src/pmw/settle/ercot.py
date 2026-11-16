@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 _OPER_DAY_RE = re.compile(r"\bon ([A-Z][a-z]+)\.? (\d{1,2}), (\d{4})\b")
@@ -72,6 +72,19 @@ def resolve(peak: Decimal, strike_type: str, floor: Decimal | None, cap: Decimal
     raise ValueError(f"unsupported strike {strike_type!r} {floor} {cap}")
 
 
+def values_agree(kalshi: Decimal, ours: Decimal) -> bool:
+    """True if `ours`, cut or rounded to Kalshi's displayed decimals, equals `kalshi`."""
+    if kalshi == ours:
+        return True
+    exp = kalshi.as_tuple().exponent
+    places = -exp if isinstance(exp, int) and exp < 0 else 0
+    q = Decimal(1).scaleb(-places)
+    return kalshi in (
+        ours.quantize(q, rounding=ROUND_DOWN),
+        ours.quantize(q, rounding=ROUND_HALF_UP),
+    )
+
+
 @dataclass(frozen=True)
 class PeakCheck:
     ticker: str
@@ -92,9 +105,16 @@ class PeakCheck:
 
     @property
     def value_agrees(self) -> bool | None:
+        """Equal at the precision Kalshi recorded.
+
+        Kalshi's expiration_value is sometimes a shortened display of the published
+        number: 5 of 78 days so far show it cut to whole MW (73917.77 -> "73917")
+        or rounded to one decimal (85799.88 -> "85799.9"). Strikes are multiples of
+        500 MW, so this cannot change an outcome; the outcome check is separate.
+        """
         if self.kalshi_value is None or self.our_peak is None:
             return None
-        return self.kalshi_value == self.our_peak
+        return values_agree(self.kalshi_value, self.our_peak)
 
 
 def check_markets(markets: list[dict[str, Any]], peaks: dict[date, Decimal]) -> list[PeakCheck]:

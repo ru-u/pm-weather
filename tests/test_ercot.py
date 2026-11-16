@@ -422,3 +422,14 @@ def test_backfill_then_build_picks_first_complete_version(tmp_path, no_sleep):
     (row,) = pq.read_table(tmp_path / "out" / "daily_peak.parquet").to_pylist()
     assert row["first_complete_doc"] == 102 and row["peak_first_complete_str"] == "51346.64"
     assert pq.read_table(tmp_path / "out" / "hourly_load.parquet").num_rows == 24
+
+
+def test_kalshi_display_precision_is_not_a_disagreement():
+    # Real cases from settled markets (ours from NP6-346-CD, Kalshi's recorded text).
+    agree = settle_ercot.values_agree
+    assert agree(D("73917"), D("73917.77"))  # KXTXERCOTPEAKD-26OCT10, cut to whole MW
+    assert agree(D("85799.9"), D("85799.88"))  # KXTXERCOTPEAKD-26SEP12, rounded to 0.1
+    assert agree(D("51346.64"), D("51346.64"))
+    assert agree(D("73918"), D("73917.77"))  # rounded half-up to whole MW also matches
+    assert not agree(D("73916"), D("73917.77"))
+    assert not agree(D("51346.65"), D("51346.64"))

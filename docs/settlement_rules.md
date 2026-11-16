@@ -216,7 +216,23 @@ Settlement source named on the series: ERCOT data product **NP6-346-CD**,
 Volume is a summer phenomenon. The go/no-go must judge capacity on the days
 that trade, and say how many such days a year exist.
 
-Not yet replicated (Phase 3).
+### Replication status (2026-11-16): 1,334 of 1,334
+
+`uv run pmw ercot-settle-check` (after `pmw ercot-backfill` on Railway, the
+pull and `pmw ercot-build`). Every settled market (78 operating days, 2026-08-28
+to 2026-11-14) reproduces from the first complete NP6-346-CD report;
+0 contradicted.
+
+- ERCOT's archive holds exactly one posted version per operating day for all
+  3,425 days since 2017-06-29, each complete (23/24/25 rows on DST days). So far
+  "first complete" and "latest" are the same document; the code still selects
+  the first complete version in case a revision ever appears.
+- Kalshi's recorded `expiration_value` equals our peak exactly on 73 days. On 5
+  days it is a shortened display of the same number: cut to whole MW
+  (Oct 3, 8, 9 and Sep 4 operating days, e.g. 73917.77 shown as "73917") or
+  rounded to one decimal (Sep 11: 85799.88 as "85799.9"). Strikes are multiples
+  of 500 MW, so this cannot change an outcome. The value check compares at
+  Kalshi's displayed precision (`pmw.settle.ercot.values_agree`).
 
 ## ERCOT calendar-year peak: KXTXERCOTPEAK (rulebook ECONSTAT, file "ECONSTATE")
 
