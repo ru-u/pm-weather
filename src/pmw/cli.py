@@ -330,6 +330,26 @@ def ercot_settle_check(
         raise typer.Exit(1)
 
 
+@app.command("p3a")
+def p3a(
+    raw: str = typer.Option("data/raw/kalshi/p3a"),
+    interim: str = typer.Option("data/interim/ercot"),
+    out: str = typer.Option("docs/findings/p3a_result_tables.md"),
+) -> None:
+    """Experiment P3A, registered scoring. Run ONCE (docs/preregistration.md)."""
+    from pathlib import Path
+
+    from pmw.eval.p3a_score import load_inputs, report_markdown, score
+
+    _setup_logging()
+    markets, quotes, postings, actual = load_inputs(Path(raw), Path(interim))
+    r = score(markets, quotes, postings, actual)
+    Path("data/processed").mkdir(parents=True, exist_ok=True)
+    Path("data/processed/p3a_result.json").write_text(json.dumps(r, indent=1, default=str))
+    Path(out).write_text(report_markdown(r))
+    typer.echo(report_markdown(r))
+
+
 @app.command("nbm-pull")
 def nbm_pull(
     start: str = typer.Argument(..., help="First UTC date, YYYY-MM-DD"),

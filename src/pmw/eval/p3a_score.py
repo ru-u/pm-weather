@@ -379,3 +379,90 @@ def synthetic_world(
     q = pd.DataFrame(quotes)
     q["candle_end"] = pd.to_datetime(q["candle_end"], utc=True)
     return markets, q, in_use_postings(fpeaks), actual
+
+
+# ---------- run and report ----------
+
+
+def load_inputs(
+    raw: Path, interim: Path
+) -> tuple[list[dict[str, Any]], pd.DataFrame, pd.DataFrame, dict[date, float]]:
+    markets = load_markets(raw)
+    quotes = load_quotes(raw, {m["ticker"] for m in markets})
+    postings = in_use_postings(pd.read_parquet(interim / "forecast_peaks.parquet"))
+    daily = pd.read_parquet(interim / "daily_peak.parquet")
+    actual = {
+        (d.date() if hasattr(d, "date") else d): float(v)
+        for d, v in zip(daily["oper_day"], daily["peak_first_complete"], strict=True)
+        if v is not None
+    }
+    return markets, quotes, postings, actual
+
+
+def _row(name: str, r: dict[str, Any] | None) -> str:
+    if not r:
+        return f"| {name} | - | - | - | - |"
+    return f"| {name} | {r['n']} | {r['weeks']} | {r['D']:+.4f} | [{r['ci_low']:+.4f}, {r['ci_high']:+.4f}] |"  # noqa: E501
+
+
+def report_markdown(r: dict[str, Any]) -> str:
+    t = r["taker"]
+    lines = [
+        "# P3A result tables",
+        "",
+        f"Verdict under the registered rule: **{r['verdict']}**",
+        "",
+        "D = Brier(market) - Brier(ERCOT forecast); positive means the ERCOT forecast was more accurate.",  # noqa: E501
+        "",
+        "| | n | weeks | D | 95% CI |",
+        "| - | -: | -: | -: | - |",
+        _row("**Primary**", r["primary"]),
+        *[_row(f"Spread <= {k}", v) for k, v in r["sensitivity_spread"].items()],
+        _row("Training on last 3 years", r["sensitivity_train_recent"]),
+        *[_row(f"Decision {k}", v) for k, v in r["by_hour"].items()],
+        _row("Top 20% peak days", r["top_days"]),
+        _row("17:00 CT (secondary)", r["late_17CT"]),
+        "",
+        "| Forecast | Brier | Log loss |",
+        "| - | -: | -: |",
+        f"| Kalshi market | {r['brier']['market']:.4f} | {r['logloss']['market']:.4f} |",
+        f"| ERCOT forecast | {r['brier']['ercot']:.4f} | {r['logloss']['ercot']:.4f} |",
+        "",
+        "Murphy decomposition (reliability, resolution, uncertainty):",
+        "",
+        *[
+            f"- {k}: {v['reliability']:.4f}, {v['resolution']:.4f}, {v['uncertainty']:.4f}"
+            for k, v in r["murphy"].items()
+        ],
+        "",
+        "| Taker tau | trades | contracts | P&L after fees | fees | share of resamples > 0 | 95% interval | perceived/realized corr |",  # noqa: E501
+        "| -: | -: | -: | -: | -: | -: | - | -: |",
+    ]
+    for tau, s in t.items():
+        if not s.get("trades"):
+            lines.append(f"| {tau} | 0 | 0 | 0 | 0 | 0 | - | - |")
+            continue
+        lines.append(
+            f"| {tau} | {s['trades']} | {s['contracts']} | ${s['pnl']:,.0f} | ${s['fees']:,.0f} | "
+            f"{s['share_resamples_positive']:.3f} | [${s['pnl_ci'][0]:,.0f}, ${s['pnl_ci'][1]:,.0f}] | "  # noqa: E501
+            f"{s['perceived_vs_realized_corr']:.2f} |"
+        )
+    c = r["capacity"]
+    lines += [
+        "",
+        f"Capacity: median contracts per stressed day {c.get('median_contracts_stressed', 0):,.0f} "
+        f"(gate 20,000: {'met' if c.get('gate_met') else 'not met'}); all days median "
+        f"{c.get('median_contracts_all', 0):,.0f}; approximate premium on stressed days "
+        f"${c.get('median_premium_stressed_approx', 0):,.0f}. Stressed days: {', '.join(c.get('stressed_days', []))}.",  # noqa: E501
+        "",
+        f"Leakage check: {r['leakage']}. Markets scored: {r['n_markets']}; operating days: {r['n_days']}; "  # noqa: E501
+        f"training ratios: {r['training']}.",
+        "",
+        "Reliability (bin, n, mean forecast, observed frequency):",
+        "",
+    ]
+    for k, rows in r["reliability"].items():
+        lines.append(
+            f"- {k}: " + "; ".join(f"{x['mean_p']:.2f}->{x['freq']:.2f} (n={x['n']})" for x in rows)
+        )
+    return "\n".join(lines) + "\n"

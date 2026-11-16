@@ -77,3 +77,10 @@ def test_synthetic_known_answers(ercot_noise, market_noise, volume, expected):
     r = p3.score(markets, quotes, postings, actual, n_boot=500)
     assert r["leakage"]["posting_not_before_decision"] == 0
     assert r["verdict"] == expected, (r["primary"], r["taker"]["0.1"]["share_resamples_positive"])
+
+
+def test_report_renders_on_a_synthetic_result():
+    markets, quotes, postings, actual = p3.synthetic_world(0.02, 0.02)
+    r = p3.score(markets, quotes, postings, actual, n_boot=200)
+    md = p3.report_markdown(r)
+    assert "Verdict under the registered rule" in md and "| **Primary** |" in md
