@@ -17,8 +17,9 @@ can make this data differ from what a market settled on. Always record
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -53,6 +54,14 @@ class CliDay:
     low: int | None
     precip: SnowValue
     product: str  # NWS product id of the report IEM parsed, e.g. 202601021606-KOKX-CDUS41-CLINYC
+
+    @property
+    def issued_utc(self) -> datetime | None:
+        """Issue time of the parsed product, from its id (first 12 digits, UTC)."""
+        m = re.match(r"(\d{12})-", self.product)
+        if not m:
+            return None
+        return datetime.strptime(m.group(1), "%Y%m%d%H%M").replace(tzinfo=UTC)
 
 
 def parse_amount(value: Any) -> SnowValue:

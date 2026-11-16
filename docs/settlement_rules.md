@@ -87,7 +87,8 @@ ski-resort series.
 | Trace days | Add nothing to the sum. A period with only trace is "above 0" but not above 0.1. |
 | Strike comparison | `strike_type=greater` is strictly greater. Exactly at the strike is No. |
 | Missing day | A Yes already reached stands (more snow cannot undo it). Otherwise we return "undecided" rather than guess. Kalshi's own fallback is "all strikes No" if data is still unavailable at the last expiration. |
-| Which report version | "Initial non-preliminary". IEM keeps the latest CLI product per day, so a late NWS correction can differ from what settled. We record the product id next to every value. |
+| Which report version | "Initial non-preliminary". IEM keeps the latest CLI product per day, so a late NWS correction can differ from what settled. We record the product id next to every value. A CLI product issued before its climate day ended (the 4-5 pm "valid today as of" report) is preliminary and counts as missing, as does any day that has not ended (`final_only`, added 2026-11-15). One historical day is affected (KDCA 2026-02-21, IEM kept only the 16:31 EST report); ACIS fills it with the same 0.0. |
+| Station this season | Named by ICAO id in parentheses ("Providence (KPVD)"), not by CLI product. `find_station` reads either; an id not in `configs/stations.yaml` is an error. |
 | Day boundary | NWS climate day, local standard time. Storm markets that say "local calendar days in Eastern Time" agree with this from early November to mid March (EST). A storm window in DST would be off by one hour at each end: flag any such market. |
 
 ### Open questions
@@ -113,6 +114,31 @@ ski-resort series.
 5. **Ski resorts** settle on OnTheSnow resort-reported totals, a different and
    less auditable source. Logged, not modelled.
 
+### First settlement under this season's rules: KXSNOWCITIES-26NOV15
+
+Five markets, one per station (KBOS, KEWR, KNYC, KPHL, KPVD), each "strictly
+greater than 1 inch" over Nov 12-15, 2026, local calendar days in Eastern Time.
+EST has been in effect since Nov 1, so these days equal the NWS climate days.
+Trading closes 2026-11-16 04:59 UTC; expiration 2026-11-22 15:00 UTC.
+
+Checked 2026-11-16 01:45 UTC (`pmw settle-check KXSNOWCITIES --include-open`):
+**not settled yet.** Final CLI values for Nov 12-14:
+
+| Station | Nov 12 | Nov 13 | Nov 14 | Total so far | Nov 15 (preliminary, 4-5 pm) |
+| - | -: | -: | -: | -: | -: |
+| KBOS | 0.0 | T | 0.0 | T | 0.0, no precip |
+| KEWR | 0.0 | 0.0 | 0.0 | 0.0 | 0.0, no precip |
+| KNYC | 0.0 | 0.0 | 0.0 | 0.0 | 0.0, no precip |
+| KPHL | T | 0.0 | 0.0 | T | 0.0, no precip |
+| KPVD | 0.0 | 0.0 | 0.0 | 0.0 | 0.0, no precip |
+
+The storm brought rain (1.6 to 1.7 inches at KNYC and KEWR on Nov 12). Unless
+Nov 15's final report shows more than an inch, which the dry preliminary makes
+very unlikely, all five should resolve **No**. That would agree with the NWS but
+would say little about TWC versus NWS values (open question 1), since every
+total is zero or trace. **To do:** re-run after expiration and record Kalshi's
+`result` and `expiration_value` here.
+
 ### Replication status
 
 `uv run pmw settle-check all --brief`. As of 2026-11-14: 396 settled markets in
@@ -125,6 +151,7 @@ pre-registration excludes. Details in
 The contract's period, station and strike are read from each market's rule text
 when the text states them (storm-window dates, the CLI product id, "strictly
 greater than N"), and only otherwise from the ticker and `configs/stations.yaml`.
+Markets Kalshi has not settled can be computed (not scored) with `--include-open`.
 
 ---
 

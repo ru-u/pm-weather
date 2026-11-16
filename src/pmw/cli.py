@@ -180,7 +180,7 @@ def fee(
 SNOW_SERIES_WITH_HISTORY = [
     "KXNYCSNOWM", "KXBOSSNOWM", "KXDCSNOWM", "KXPHILSNOWM", "KXCHISNOWM", "KXDETSNOWM",
     "KXSEASNOWM", "KXSLCSNOWM", "KXDALSNOWM", "KXAUSSNOWM", "KXHOUSNOWM", "KXSNOWNYM",
-    "KXSNOWSTORM",
+    "KXSNOWSTORM", "KXSNOWCITIES",
 ]  # fmt: skip
 
 
@@ -189,6 +189,9 @@ def settle_check(
     series: str = typer.Argument("KXNYCSNOWM", help="Snow series ticker, or 'all'"),
     brief: bool = typer.Option(False, help="Only print events and mismatches."),
     no_fallback: bool = typer.Option(False, help="Use CLI data only; do not fill gaps from ACIS."),
+    include_open: bool = typer.Option(
+        False, help="Also compute outcomes for markets Kalshi has not settled yet."
+    ),
 ) -> None:
     """Replicate settlement of settled snow markets from NWS daily snowfall data."""
     from pmw.markets.kalshi import KalshiPublic
@@ -204,7 +207,16 @@ def settle_check(
     targets = SNOW_SERIES_WITH_HISTORY if series == "all" else [series]
     totals: dict[str, int] = {}
     for target in targets:
-        checks = check_series(client, iem, target, stations, acis)
+        markets = None
+        if include_open:
+            markets = client.settled_markets(target)
+            seen = {m["ticker"] for m in markets}
+            markets += [
+                m
+                for m in client.markets(series_ticker=target)
+                if m["ticker"] not in seen and m.get("result") not in ("yes", "no")
+            ]
+        checks = check_series(client, iem, target, stations, acis, markets=markets)
         typer.echo(format_checks(checks, target, verbose=not brief and series != "all"))
         for key, value in summarize(checks).items():
             totals[key] = totals.get(key, 0) + value

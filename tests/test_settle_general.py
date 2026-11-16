@@ -39,11 +39,14 @@ class FakeIem:
 class FakeAcis:
     def __init__(self) -> None:
         self.calls: list[str] = []
-        self.kbos = parse_acis_json(load_fixture("acis_KBOS_2026-03.json"))
+        self.data = {
+            "KBOS": parse_acis_json(load_fixture("acis_KBOS_2026-03.json")),
+            "KDCA": parse_acis_json(load_fixture("acis_KDCA_2026-02.json")),
+        }
 
     def snow(self, station: str, start: date, end: date) -> dict:
         self.calls.append(station)
-        return self.kbos if station == "KBOS" else {}
+        return {d: v for d, v in self.data.get(station, {}).items() if start <= d <= end}
 
 
 def _event(ticker: str) -> list[dict]:
@@ -66,6 +69,11 @@ def _event(ticker: str) -> list[dict]:
          date(2021, 12, 1), date(2021, 12, 31)),
         ("total snowfall in New York City in December 2026 is strictly", "KXNYCSNOWM-26DEC",
          date(2026, 12, 1), date(2026, 12, 31)),
+        # This season's wording: one month name, day range, one year.
+        ("in Boston (KBOS) from Nov 12 to 15, 2026 is strictly", "KXSNOWCITIES-26NOV15",
+         date(2026, 11, 12), date(2026, 11, 15)),
+        ("from Nov 28 to Dec 2, 2026 inclusive", "KXSNOWCITIES-26DEC02",
+         date(2026, 11, 28), date(2026, 12, 2)),
         ("no dates here at all", "KXNYCSNOWM-26FEB", date(2026, 2, 1), date(2026, 2, 28)),
     ],
 )  # fmt: skip
@@ -123,7 +131,6 @@ def test_storm_windows_and_old_markets_reproduce_without_fallback():
     iem = FakeIem()
     for series, event, total in (
         ("KXSNOWSTORM", "KXSNOWSTORM-26JANBOS", "23.2"),
-        ("KXSNOWSTORM", "KXSNOWSTORM-26FEBDC2", "1.0"),
         ("KXSNOWNYM", "SNOWNYM-22JAN", "15.3"),
         ("KXSNOWNYM", "KXSNOWNYM-25JAN", "3.0"),
     ):
@@ -159,3 +166,56 @@ def test_fallback_value_never_overrides_a_cli_value():
     cli = iem.days("KBOS", period[0], period[-1])
     bogus = {d: parse_acis_value("99.0") for d in period}
     assert period_total(cli, period, bogus).inches == D("23.2")
+
+
+SNOWCITIES = load_fixture("kalshi_markets_KXSNOWCITIES-26NOV15.json")["markets"]
+
+
+def test_this_seasons_rules_name_the_station_by_icao_in_parentheses():
+    # Real rule text, e.g. "...recorded in Providence (KPVD) from Nov 12 to 15, 2026...".
+    # No CLI product is named and the series has no default station.
+    assert STATIONS.for_series("KXSNOWCITIES") is None
+    found = {
+        m["ticker"].rsplit("-", 1)[1]: find_station(m, "KXSNOWCITIES", STATIONS) for m in SNOWCITIES
+    }
+    assert {k: st.cli_id for k, st in found.items()} == {
+        "BOS": "KBOS", "EWR": "KEWR", "NYC": "KNYC", "PVD": "KPVD", "PHL": "KPHL",
+    }  # fmt: skip
+    for m in SNOWCITIES:
+        period = parse_period(m["rules_primary"], m["event_ticker"])
+        assert (period[0], period[-1]) == (date(2026, 11, 12), date(2026, 11, 15)), m["ticker"]
+        assert parse_strike(m) == ("greater", D(1), None)
+    # An ICAO id we have not configured: refuse rather than fall back.
+    odd = {"rules_primary": "snowfall recorded in Nowhere (KZZZ) from Nov 1 to 3, 2026"}
+    assert find_station(odd, "KXNYCSNOWM", STATIONS) is None
+
+
+def test_preliminary_cli_value_is_not_final():
+    # Real case: IEM's only KDCA row for 2026-02-21 is the intraday report issued
+    # 21:31 UTC (4:31 pm EST), before the climate day ended at 05:00 UTC Feb 22.
+    iem = FakeIem()
+    row = iem.rows[("KDCA", date(2026, 2, 21))]
+    assert row.product.startswith("202602212131-")
+    event = _event("KXSNOWSTORM-26FEBDC2")
+    # CLI alone: that day is missing, so strikes the total has not passed stay undecided.
+    alone = check_series(None, iem, "KXSNOWSTORM", STATIONS, None, markets=event)  # type: ignore[arg-type]
+    assert alone[0].total.n_missing == 1 and alone[0].total.inches == D("1.0")
+    assert any(c.computed is None for c in alone)
+    # With ACIS (final 0.0 for Feb 21) every strike reproduces.
+    acis = FakeAcis()
+    full = check_series(None, iem, "KXSNOWSTORM", STATIONS, acis, markets=event)  # type: ignore[arg-type]
+    assert full[0].total.inches == D("1.0") and full[0].total.n_filled == 1
+    assert all(c.match for c in full)
+
+
+def test_days_not_yet_ended_are_missing_even_with_a_value():
+    from datetime import UTC, datetime
+
+    iem = FakeIem()
+    event = _event("KXSNOWSTORM-26JANBOS")  # Jan 24-26, 2026, total 23.2
+    # Checked at 03:00 UTC Jan 26 (10 pm EST Jan 25): Jan 26 has not started.
+    early = check_series(
+        None, iem, "KXSNOWSTORM", STATIONS, None, markets=event,  # type: ignore[arg-type]
+        now=datetime(2026, 1, 26, 3, tzinfo=UTC),
+    )  # fmt: skip
+    assert early[0].total.n_missing >= 1

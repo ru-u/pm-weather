@@ -30,13 +30,13 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from pmw.markets.kalshi import KalshiPublic
 from pmw.utils.config import Station, StationsConfig
-from pmw.utils.timeutil import date_range, month_days
+from pmw.utils.timeutil import climate_day_bounds_utc, date_range, month_days
 from pmw.weather.acis import Acis
 from pmw.weather.iem_cli import CliDay, IemCli, SnowValue
 
@@ -49,6 +49,13 @@ _DATE_RE = re.compile(r"\b([A-Z][a-z]{2,8})\.? (\d{1,2})(?:st|nd|rd|th)?, (\d{4}
 _MONTH_YEAR_RE = re.compile(r"\bin ([A-Z][a-z]{2,8}) (\d{4})\b")
 _STRIKE_RE = re.compile(r"strictly greater than ([0-9]+(?:\.[0-9]+)?)")
 _CLI_RE = re.compile(r"\bCLI([A-Z]{3})\b")
+# This season's rules name the station by ICAO id in parentheses: "Boston (KBOS)".
+_ICAO_PAREN_RE = re.compile(r"\(([KP][A-Z0-9]{3})\)")
+# Same-year short range: "from Nov 12 to 15, 2026" or "Nov 28 to Dec 2, 2026".
+_SHORT_RANGE_RE = re.compile(
+    r"\b([A-Z][a-z]{2,8})\.? (\d{1,2})(?:st|nd|rd|th)? (?:to|through|-|\u2013) "
+    r"(?:([A-Z][a-z]{2,8})\.? )?(\d{1,2})(?:st|nd|rd|th)?, (\d{4})\b"
+)
 
 
 @dataclass(frozen=True)
@@ -92,6 +99,33 @@ def period_total(
         any_trace = any_trace or value.trace
         total += value.measurable
     return PeriodTotal(total, any_trace, len(period), missing, filled)
+
+
+def final_only(
+    cli: dict[date, CliDay],
+    fallback: dict[date, SnowValue] | None,
+    std_utc_offset_hours: float,
+    now: datetime,
+) -> tuple[dict[date, CliDay], dict[date, SnowValue] | None]:
+    """Drop values that cannot be final yet.
+
+    NWS issues an intraday CLI ("valid today as of 5 PM") before the climate day
+    ends, and IEM serves it until the next-morning report replaces it. A CLI row
+    whose product was issued before its climate day ended is preliminary, and a
+    day that has not ended has no final value in any source. Both count as missing.
+    """
+
+    def ended(d: date) -> datetime:
+        return climate_day_bounds_utc(d, std_utc_offset_hours)[1]
+
+    kept = {}
+    for d, row in cli.items():
+        issued = row.issued_utc
+        if ended(d) <= now and (issued is None or issued >= ended(d)):
+            kept[d] = row
+    if fallback is not None:
+        fallback = {d: v for d, v in fallback.items() if ended(d) <= now}
+    return kept, fallback
 
 
 def resolve(
@@ -158,9 +192,19 @@ def parse_period(rules_primary: str, event_ticker: str) -> list[date]:
     """The contract's days, from the rule text when it states dates.
 
     Handles "between Nov 8, 2021 and Nov 30, 2021", "from Jan 24, 2026 through
-    Jan 26, 2026", "in Feb 21, 2026 - Feb 24, 2026" and "in December 2026".
-    Falls back to the month in the event ticker.
+    Jan 26, 2026", "in Feb 21, 2026 - Feb 24, 2026", "from Nov 12 to 15, 2026"
+    and "in December 2026". Falls back to the month in the event ticker.
     """
+    m = _SHORT_RANGE_RE.search(rules_primary)
+    if m:
+        first_month = _month_number(m.group(1))
+        last_month = _month_number(m.group(3)) if m.group(3) else first_month
+        if first_month is not None and last_month is not None:
+            year = int(m.group(5))
+            start = date(year, first_month, int(m.group(2)))
+            end = date(year, last_month, int(m.group(4)))
+            if end >= start:
+                return date_range(start, end)
     found = []
     for name, day, year in _DATE_RE.findall(rules_primary):
         month = _month_number(name)
@@ -196,7 +240,12 @@ def parse_strike(market: dict[str, Any]) -> tuple[str, Decimal | None, Decimal |
 def find_station(
     market: dict[str, Any], series_ticker: str, stations: StationsConfig
 ) -> Station | None:
-    """Station named in the rule text (CLI product id), else the series default."""
+    """Station named in the rule text, else the series default.
+
+    Last season's rules named the NWS CLI product ("CLIBOS"); this season's name
+    the ICAO id in parentheses ("Boston (KBOS)"). The CLI product wins if both
+    appear. A named station that is not configured returns None: never guess.
+    """
     text = f"{market.get('rules_primary') or ''} {market.get('rules_secondary') or ''}"
     m = _CLI_RE.search(text)
     if m:
@@ -204,7 +253,13 @@ def find_station(
         for st in stations.stations.values():
             if st.cli_product == product:
                 return st
-        return None  # the rules name a station we have not configured: do not guess
+        return None
+    m = _ICAO_PAREN_RE.search(text)
+    if m:
+        for st in stations.stations.values():
+            if st.icao == m.group(1):
+                return st
+        return None
     return stations.for_series(series_ticker)
 
 
@@ -258,8 +313,14 @@ def check_series(
     stations: StationsConfig,
     acis: Acis | None = None,
     markets: list[dict[str, Any]] | None = None,
+    now: datetime | None = None,
 ) -> list[SettlementCheck]:
-    """Recompute every settled market of a snow series from official daily data."""
+    """Recompute every settled market of a snow series from official daily data.
+
+    Preliminary CLI values and days that have not ended count as missing
+    (`final_only`), so a market checked before its window closes stays undecided.
+    """
+    now = now or datetime.now(UTC)
     checks = []
     for m in markets if markets is not None else client.settled_markets(series_ticker):
         station = find_station(m, series_ticker, stations)
@@ -267,9 +328,11 @@ def check_series(
             raise ValueError(f"no configured settlement station for {m['ticker']}")
         period = parse_period(m.get("rules_primary") or "", m["event_ticker"])
         cli = iem.days(station.cli_id, period[0], period[-1])
+        cli, _ = final_only(cli, None, station.std_utc_offset_hours, now)
         fallback = None
         if acis is not None and any(d not in cli or cli[d].snow.missing for d in period):
             fallback = acis.snow(station.icao, period[0], period[-1])
+            _, fallback = final_only({}, fallback, station.std_utc_offset_hours, now)
         total = period_total(cli, period, fallback)
         strike_type, floor, cap = parse_strike(m)
         checks.append(
@@ -287,17 +350,19 @@ def check_series(
                 computed=resolve(total, strike_type, floor, cap),
             )
         )
-    return sorted(checks, key=lambda c: (c.event_ticker, c.floor_strike or Decimal(0)))
+    return sorted(checks, key=lambda c: (c.event_ticker, c.station, c.floor_strike or Decimal(0)))
 
 
 def summarize(checks: list[SettlementCheck]) -> dict[str, int]:
     binary = [c for c in checks if c.kalshi_result in ("yes", "no")]
+    pending = sum(c.kalshi_result == "" for c in checks)  # not settled by Kalshi yet
     return {
-        "markets": len(checks),
+        "markets": len(checks) - pending,
         "reproduced": sum(c.match for c in checks),
         "contradicted": sum(c.computed is not None and not c.match for c in binary),
         "undecided": sum(c.computed is None for c in binary),
-        "not_binary": len(checks) - len(binary),
+        "not_binary": len(checks) - len(binary) - pending,
+        "pending": pending,
         "used_fallback": sum(c.total.n_filled > 0 for c in checks),
         "value_disagrees": sum(c.value_agrees is False for c in checks),
     }
@@ -305,9 +370,10 @@ def summarize(checks: list[SettlementCheck]) -> dict[str, int]:
 
 def format_checks(checks: list[SettlementCheck], series: str, verbose: bool = True) -> str:
     lines = [f"Settlement replication: {series} (NWS CLI via IEM, gaps filled from ACIS)"]
-    event = ""
+    group: tuple[str, str] = ("", "")
     for c in checks:
-        if c.event_ticker != event:
+        if (c.event_ticker, c.station) != group:  # one event can span several stations
+            group = (c.event_ticker, c.station)
             event = c.event_ticker
             t = c.total
             extra = ""
@@ -322,17 +388,19 @@ def format_checks(checks: list[SettlementCheck], series: str, verbose: bool = Tr
             lines.append(
                 f"\n{event}: {c.station} {c.period[0]} to {c.period[1]}: total {t.shown} in{extra}"
             )
-        if verbose or not c.match:
+        if verbose or not c.match or not c.kalshi_result:
             strike = c.floor_strike if c.floor_strike is not None else c.cap_strike
             ours = {True: "yes", False: "no", None: "undecided"}[c.computed]
             lines.append(
                 f"  {c.ticker:<30} {c.strike_type:<8} {strike!s:>5}  "
-                f"kalshi={c.kalshi_result:<6} ours={ours:<9} {'ok' if c.match else 'MISMATCH'}"
+                f"kalshi={c.kalshi_result or 'open':<6} ours={ours:<9} "
+                f"{'pending' if not c.kalshi_result else ('ok' if c.match else 'MISMATCH')}"
             )
     s = summarize(checks)
     lines.append(
         f"\n{s['reproduced']}/{s['markets']} reproduced, {s['contradicted']} contradicted, "
         f"{s['undecided']} undecided, {s['not_binary']} not yes/no, "
         f"{s['used_fallback']} used ACIS for at least one day"
+        + (f"; {s['pending']} not settled yet (computed only)" if s["pending"] else "")
     )
     return "\n".join(lines)
