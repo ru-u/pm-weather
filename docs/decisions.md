@@ -294,3 +294,11 @@ the rest of the discipline stands: models are trained on data before the test
 period, chosen on a validation year, and scored once on a held-out period under
 a pre-registered rule before any paper trading. ERCOT first (9 years of
 actuals and forecasts already backfilled), then snow storm windows.
+
+**D-041. ERCOT nowcast v1 beats the P3A baseline on validation by 20% (Brier).**
+NP3-910-ER real-time load backfilled (3,455 days, 229 requests) and parsed
+(early files are `48h_*` and 15-minute). LightGBM quantiles with conformal
+calibration: validation Brier 0.072 against 0.090 for the P3A method, best at
+every decision hour, gain growing through the day; intervals calibrated (81.5% /
+95.5%). This licenses P4E (model vs Kalshi market), to be pre-registered before
+any price is joined. See `docs/findings/2026-11-16-phase4-ercot-v1.md`.

@@ -39,6 +39,7 @@ from pmw.energy.ercot import (
     FZN_ZONES,
     IN_USE,
     LOAD_FORECAST_BY_WEATHER_ZONE,
+    MIN_POINTS_PER_HOUR,
     REAL_TIME_LOAD,
     LoadHour,
     daily_peak,
@@ -293,7 +294,7 @@ def build_telemetry(root: Path, out: Path) -> dict[str, Any]:
         for r in hourly_rows:
             t = tot.get((r["oper_day"], r["hour_ending"], r["repeated"]))
             n = int(r["n"])  # type: ignore[call-overload]
-            if t and n >= 10:
+            if t and n >= MIN_POINTS_PER_HOUR:
                 gap.append(float(r["mean_load"]) / t - 1)  # type: ignore[arg-type]
     gap.sort()
     return {

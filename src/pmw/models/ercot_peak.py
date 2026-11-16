@@ -27,6 +27,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
+from pmw.energy.ercot import MIN_POINTS_PER_HOUR
+
 CT = ZoneInfo("America/Chicago")
 DECISION_HOURS = (0, 6, 10, 14, 17)
 SLOT_FOR_HOUR = {0: 23, 6: 5, 10: 9, 14: 13, 17: 16}
@@ -85,7 +87,11 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
         d: g.sort_values(["hour_ending", "repeated"]) for d, g in t.hourly.groupby("oper_day")
     }
     tel_h = {d: g for d, g in t.tel_hourly.groupby("oper_day")}
-    tel_max = t.tel_hourly[t.tel_hourly["n"] >= 6].groupby("oper_day")["mean_load"].max()
+    tel_max = (
+        t.tel_hourly[t.tel_hourly["n"] >= MIN_POINTS_PER_HOUR]
+        .groupby("oper_day")["mean_load"]
+        .max()
+    )
     inuse = t.fc_peaks[t.fc_peaks["in_use"]]
     models = t.fc_peaks[~t.fc_peaks["in_use"]]
     inuse_by_day = {d: g.sort_values("post_utc") for d, g in inuse.groupby("delivery_day")}
@@ -134,7 +140,9 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
             # Intraday, from telemetry of completed hours (live dashboard stand-in).
             th = tel_h.get(d)
             done = (
-                th[(th["hour_ending"] <= h) & (th["n"] >= 6)] if th is not None and h > 0 else None
+                th[(th["hour_ending"] <= h) & (th["n"] >= MIN_POINTS_PER_HOUR)]
+                if th is not None and h > 0
+                else None
             )
             H_tel = float(done["mean_load"].max()) if done is not None and len(done) else math.nan
             if done is not None and len(done):
@@ -342,7 +350,7 @@ def telemetry_gap(t: Tables, end: date) -> np.ndarray:
     h = t.hourly[t.hourly["oper_day"] <= end]
     peak_rows = h.loc[h.groupby("oper_day")["total"].idxmax()]
     m = peak_rows.merge(t.tel_hourly, on=["oper_day", "hour_ending", "repeated"])
-    m = m[m["n"] >= 6]
+    m = m[m["n"] >= MIN_POINTS_PER_HOUR]
     return (m["mean_load"] / m["total"] - 1).to_numpy(float)
 
 

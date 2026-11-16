@@ -369,6 +369,7 @@ def forecast_daily_peaks(rows: list[ForecastHour]) -> dict[tuple[date, str], Dec
 # ---------------------------------------------------------------------------
 
 REAL_TIME_LOAD = "np3-910-er"
+MIN_POINTS_PER_HOUR = 3  # 15-minute SCED intervals give 4 per hour in early years
 AGG_ZONES = ("Houston", "North", "South", "West")
 AGG_COLUMNS = (
     "SCED Time Stamp", "Repeated Hour Flag", "SUM TELEM GEN MW", "SUM TELEM DCTIE MW",
@@ -417,7 +418,9 @@ def parse_agg_load_summary(doc_zip: bytes) -> list[TelemetryPoint]:
         names = z.namelist()
 
         def find(suffix: str) -> str | None:
-            hits = [n for n in names if n.lower().startswith(f"2d_agg_load_summary{suffix}-")]
+            # "2d_" since 2018; "48h_" before. 15-minute SCED intervals in early years, 5 later.
+            prefixes = (f"2d_agg_load_summary{suffix}-", f"48h_agg_load_summary{suffix}-")
+            hits = [n for n in names if n.lower().startswith(prefixes)]
             return hits[0] if len(hits) == 1 else None
 
         system_name = find("")
