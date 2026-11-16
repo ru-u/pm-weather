@@ -12,7 +12,8 @@ Outputs under data/interim/ercot/:
                              peak (what Kalshi settles on), plus the latest version's
   hourly_load.parquet        hourly TOTAL and zones from the first complete version
   forecast_peaks.parquet     one row per (posting, delivery day, model): forecast daily
-                             peak; `in_use` marks the model ERCOT flags in that posting
+                             peak; model INUSE (in_use = True) is the hour-by-hour
+                             flagged model, which is what P3A uses
   forecast_hourly.parquet    hourly SystemTotal of the in-use model, per posting
 """
 
@@ -36,7 +37,9 @@ from pmw.energy.ercot import (
     LoadHour,
     daily_peak,
     expected_hours,
+    IN_USE,
     forecast_daily_peaks,
+    in_use_daily_peaks,
     is_complete,
     parse_load_by_forecast_zone_csv,
     parse_load_forecast_csv,
@@ -170,7 +173,17 @@ def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
             bad += 1
             log.warning("doc %s unreadable: %s", d.doc_id, exc)
             continue
-        in_use = {r.model for r in rows if r.in_use}
+        for day, peak in in_use_daily_peaks(rows).items():
+            peaks_rows.append(
+                {
+                    "doc_id": d.doc_id,
+                    "post_utc": d.post_utc,
+                    "delivery_day": day,
+                    "model": IN_USE,
+                    "in_use": True,
+                    "peak": float(peak),
+                }
+            )
         for (day, model), peak in forecast_daily_peaks(rows).items():
             peaks_rows.append(
                 {
@@ -178,7 +191,7 @@ def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
                     "post_utc": d.post_utc,
                     "delivery_day": day,
                     "model": model,
-                    "in_use": model in in_use,
+                    "in_use": False,  # single models; the in-use series is IN_USE
                     "peak": float(peak),
                 }
             )
@@ -205,5 +218,6 @@ def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
         "postings_without_in_use_model": len(docs)
         - bad
         - len({r["doc_id"] for r in peaks_rows if r["in_use"]}),
+        "postings": len(docs) - bad,
         "forecast_peak_rows": len(peaks_rows),
     }

@@ -322,4 +322,13 @@ secondary only. No design choice was changed after seeing these numbers.
 
 ## Deviations
 
-None.
+- **P3A, 2026-11-16 02:50 UTC, before any forecast was joined to a price or
+  scored: meaning of "the model flagged InUseFlag = Y".** The frozen text
+  assumed one in-use model per posting, as in the one 2026 file seen. The
+  2017-19 postings, read for format after freezing, flag one model per HOUR
+  (0 of 57,600 hours have two), and the flagged model changes within the
+  current day and between days. F is therefore the daily maximum of the
+  hour-by-hour flagged values (`pmw.energy.ercot.in_use_daily_peaks`), which is
+  the literal reading of the registered sentence. For 2026 postings, where one
+  model is flagged on every hour, nothing changes. Reason: data format, not
+  results.

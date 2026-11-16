@@ -433,3 +433,29 @@ def test_kalshi_display_precision_is_not_a_disagreement():
     assert agree(D("73918"), D("73917.77"))  # rounded half-up to whole MW also matches
     assert not agree(D("73916"), D("73917.77"))
     assert not agree(D("51346.65"), D("51346.64"))
+
+
+def test_in_use_peak_is_built_hour_by_hour():
+    from pmw.energy.ercot import ForecastHour, in_use_daily_peaks
+
+    day = date(2026, 11, 14)
+
+    def h(hour: int, model: str, total: str, flag: bool) -> ForecastHour:
+        return ForecastHour(day, hour, False, model, flag, D(total))
+
+    rows = []
+    for hour in range(1, 25):
+        # Model A is flagged before noon, B after; B's own peak (90000) at 08:00 is not in use.
+        rows.append(h(hour, "A", "60000" if hour != 18 else "99999", hour <= 12))
+        rows.append(h(hour, "B", "90000" if hour == 8 else f"{61000 + hour}", hour > 12))
+    assert in_use_daily_peaks(rows) == {day: D("61024")}
+    # A missing flag for one hour: the day is not complete.
+    assert in_use_daily_peaks([r for r in rows if not (r.hour_ending == 5 and r.in_use)]) == {}
+    # Real 2026 posting: one model (X) flagged on every hour.
+    from pmw.energy.ercot import forecast_daily_peaks, parse_load_forecast_csv
+
+    _, text = read_doc_csv((FIXTURES / "ercot_np3-565-cd_20261115T1930.zip").read_bytes())
+    rows = parse_load_forecast_csv(text)
+    inuse = in_use_daily_peaks(rows)
+    single = forecast_daily_peaks(rows)
+    assert inuse and all(inuse[d] == single[(d, "X")] for d in inuse)

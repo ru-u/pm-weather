@@ -364,6 +364,35 @@ def forecast_daily_peaks(rows: list[ForecastHour]) -> dict[tuple[date, str], Dec
     return out
 
 
+IN_USE = "INUSE"  # pseudo-model: the flagged model's value, hour by hour
+
+
+def in_use_daily_peaks(rows: list[ForecastHour]) -> dict[date, Decimal]:
+    """{delivery day: max over hours of the in-use model's SystemTotal}.
+
+    InUseFlag is set per HOUR (exactly one model per hour in every posting
+    checked); for the current day, past hours carry the model in use at the time
+    and later days can switch model day by day. A day counts only if every hour
+    has exactly one flagged value.
+    """
+    by: dict[date, dict[tuple[int, bool], Decimal | None]] = {}
+    dup: set[date] = set()
+    for r in rows:
+        if not r.in_use:
+            continue
+        hours = by.setdefault(r.delivery_day, {})
+        key = (r.hour_ending, r.repeated)
+        if key in hours:
+            dup.add(r.delivery_day)
+        hours[key] = r.system_total
+    out = {}
+    for day, hours in by.items():
+        vals = [v for v in hours.values() if v is not None]
+        if day not in dup and len(vals) == len(hours) == expected_hours(day):
+            out[day] = max(vals)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # HTTP client
 # ---------------------------------------------------------------------------
