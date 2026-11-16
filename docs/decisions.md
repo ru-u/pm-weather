@@ -283,3 +283,14 @@ owner has done. This removes a practical blocker for any future trading service.
 It is not approval of live trading: rule 1 still requires the owner's written
 approval here, and no strategy has passed a go/no-go gate (P2A and P3A are
 CONDITIONAL). Research and logging use public endpoints and are unaffected.
+
+**D-040. Owner starts Phase 4 modelling for ERCOT and snow (2026-11-16).**
+After P2A and P3A came out CONDITIONAL, the owner decided to build models anyway,
+following the nowcasting approach in a public write-up of a profitable Kalshi
+hourly-temperature strategy (NGBoost distributional model on live observations
+plus forecasts, log-odds blend with NBM, trading naive opening quotes). This
+overrides the "documented forecast weakness" clause of the CONDITIONAL rule;
+the rest of the discipline stands: models are trained on data before the test
+period, chosen on a validation year, and scored once on a held-out period under
+a pre-registered rule before any paper trading. ERCOT first (9 years of
+actuals and forecasts already backfilled), then snow storm windows.
