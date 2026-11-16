@@ -264,3 +264,14 @@ backfilled for postings at 23, 05, 09, 13 and 16 CT only.
 bucket answered one upload with `SLOW_DOWN`; ERCOT itself was fine. ERCOT jobs
 now retry bucket operations with backoff (2 s doubling to 60 s, 8 attempts).
 Resumed at 04:01 UTC from 2019-11-01; documents already stored were skipped.
+
+**D-038. P3A result: CONDITIONAL; ERCOT modeling is gated.** The Kalshi
+KXTXERCOTPEAKD market was more accurate than probabilities from ERCOT's own
+seven-day load forecast (D = -0.0110, CI excludes zero, same sign in every
+registered variant). Not NO GO only because the 54-trade taker simulation made
++$261 (94% of resamples positive), with a negative perceived-versus-realized
+edge correlation. Capacity in summer is adequate (median stressed day 37,855
+contracts). As registered: no Phase 4 ERCOT model without a specific, documented
+forecast weakness; next ERCOT step is a prospective test on live-logged books
+through summer 2027 (P3A-S, to be registered). Both Phase 2 and Phase 3 now say
+the same thing: the free public forecast is priced in.

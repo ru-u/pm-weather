@@ -179,9 +179,12 @@ data/         gitignored: raw/ interim/ processed/ live/
    tested prospectively on live-logged data (P2A-S). Do not re-run or retune P2A:
    it is done; anything further is a new, separately registered experiment.
 3. ERCOT go/no-go (needs volume of about $20k/day on stressed days as well).
-   In progress since 2026-11-15: rules written up, client built, `ercot-jobs`
-   service live (D-035), archives backfilled from 2017. Experiment P3A in
-   `docs/preregistration.md`; scoring code in `src/pmw/eval/p3a_score.py`.
+   DONE 2026-11-16, CONDITIONAL (P3A, D-038). The market was more accurate than
+   ERCOT's own load forecast (D = -0.011, CI excludes 0); taker P&L positive but
+   on 54 trades with negative perceived/realized correlation; summer capacity is
+   fine. Settlement replication 1,334/1,334. Do not re-run or retune P3A. ERCOT
+   modeling only with a documented forecast weakness; next is a prospective
+   test on live books through summer 2027 (P3A-S, register first).
 4. Modeling, only if a gate passes.
 5. Paper trading, then tiny live with hard caps and a kill switch, only on
    written approval.

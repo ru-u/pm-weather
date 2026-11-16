@@ -181,7 +181,8 @@ split by NBM version. Test winter held out: 2025-26, touched once.
 
 ## Experiment P3A: Kalshi ERCOT daily peak versus ERCOT's own load forecast
 
-**Status: FROZEN 2026-11-16 02:45 UTC**, before any NP3-565-CD forecast was
+**Status: FROZEN 2026-11-16 02:45 UTC. RUN 2026-11-16 05:08 UTC: CONDITIONAL
+(see Results).** Frozen before any NP3-565-CD forecast was
 parsed, before any forecast was joined to a price, and before any forecast was
 scored against an outcome. Design choices were made by Claude while the owner
 was away (the owner asked for work to continue); the owner may review them, and
@@ -319,6 +320,11 @@ secondary only. No design choice was changed after seeing these numbers.
 - **P2A, run 2026-11-15 21:04 UTC: CONDITIONAL.** D = -0.0103 [-0.0167, -0.0029]
   (the market was more accurate than the NBM composite); taker P&L positive in
   62.9% of resamples. See `docs/findings/2026-11-15-p2a-result.md`.
+- **P3A, run 2026-11-16 05:08 UTC: CONDITIONAL.** D = -0.0110 [-0.0178, -0.0035]
+  (the market was more accurate than ERCOT's own forecast); taker P&L positive
+  in 94.2% of resamples on 54 trades, with a perceived-versus-realized edge
+  correlation of -0.33; capacity gate met (median stressed day 37,855
+  contracts). See `docs/findings/2026-11-16-p3a-result.md`.
 
 ## Deviations
 
