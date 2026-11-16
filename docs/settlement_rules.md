@@ -190,10 +190,68 @@ Settlement source named on the series: ERCOT data product **NP6-346-CD**,
   2026" and closes 2026-11-15 05:55Z (11:55 PM CST on Nov 14).
 - DST days have 23 or 25 hourly rows. Handle both.
 
+- Rulebook ECONSTAT (generic economic-statistic terms, read 2026-11-15):
+  "above" is `>`; "unless explicitly stated otherwise, only the first
+  non-preliminary release ... will be used"; expiration value is the value "as
+  documented by the Source Agency on the Expiration Date". The market rules
+  state the specifics (first complete report, no rounding), so they govern.
+- Rule text is identical across all 1,334 settled markets (2026-08-28 to
+  2026-11-14 operating days, 78 events) apart from whitespace and a "the the"
+  typo in early events. Every settled market carries `expiration_value`, in two
+  formats: `"81,227.32"` and `"78487.51"`. Strip commas; keep as Decimal.
+- Kalshi settles 7 to 12.5 hours after close (median 8.6 h), so the first
+  report is normally posted within hours of the operating day ending.
+- **Operating day in the rule text is the authority**, and must equal the event
+  ticker's date minus one day; a mismatch is an error, not a guess.
+
+#### History and volume (2026-11-15)
+
+| | |
+| - | - |
+| First / last settled operating day | 2026-08-28 / 2026-11-14 |
+| Events, markets | 78, 1,334 (10 to 31 strikes per event, all `greater`) |
+| Contracts per event | median 18.9k, p90 60k, max 87k |
+| Contracts per event, Nov 10 to 14 | 21 to 1,094 |
+
+Volume is a summer phenomenon. The go/no-go must judge capacity on the days
+that trade, and say how many such days a year exist.
+
 Not yet replicated (Phase 3).
 
-`KXTXERCOTPEAK` (one event, `-27JAN01`, about 1.06M contracts traded) is a
-different question: the peak over a longer period. Rules not yet read.
+## ERCOT calendar-year peak: KXTXERCOTPEAK (rulebook ECONSTAT, file "ECONSTATE")
+
+One event so far, `KXTXERCOTPEAK-27JAN01`: "integrated system load on the ERCOT
+grid during calendar year 2026 is above X MW", strikes 91.5k to 98k MW, opened
+2026-08-18, closes 2027-01-01 06:29Z, expires 2027-01-08 06:30Z. About 1.06M
+contracts traded; every strike last traded at 2 to 3 cents on 2026-11-15.
+
+### Market-level rule text (KXTXERCOTPEAK-27JAN01-T92000)
+
+> If ERCOT reports that the integrated system load on the ERCOT grid during
+> calendar year 2026 is above 92,000 MW, then the market resolves to Yes.
+>
+> Resolution will use ERCOT's integrated system load for a full hour.
+> Instantaneous load readings will not be considered.
+>
+> ERCOT's preliminary peak-demand figures may change during the settlement
+> process. Resolution will use the applicable official settled peak-demand
+> value published by ERCOT.
+
+### Our interpretation, and how it differs from the daily contract
+
+- **Different source version.** The daily contract uses the *first complete*
+  NP6-346-CD report; this one uses ERCOT's *official settled* peak (later
+  revisions count, up to expiration on 2027-01-08). The two can differ by tens
+  of MW. No named data product: the likely candidates are the settled hourly
+  load archive (ERCOT "Hourly Load Data Archive", native load) or ERCOT's
+  published annual peak. To confirm before any analysis.
+- **Kalshi's series metadata names the wrong source** (the New York Fed SOFR
+  page). The contract terms URL points to `ECONSTATE.pdf`, which is the same
+  generic ECONSTAT text. Flagged; the rule text governs.
+- **Little left to trade.** Summer 2026 is over; YES needs a new all-time
+  winter peak above 91.5 GW in the last six weeks of the year. The 1.06M
+  contracts are mostly history. For the go/no-go this event is context, not a
+  test sample: one outcome cannot measure an edge.
 
 ---
 
