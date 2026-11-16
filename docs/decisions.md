@@ -211,3 +211,20 @@ same sign in every registered variant); the naive taker strategy made +$508 on
 edge correlation of 0.04. As registered: no Phase 4 snow model unless P2B finds
 a specific NBM weakness. Priorities now: (1) ERCOT go/no-go (Phase 3),
 (2) P2B, (3) keep logging for the prospective storm-window test P2A-S.
+
+**D-032. A CLI value issued before its climate day ended is not final.** NWS
+issues an intraday CLI ("valid today as of 5 PM") and IEM serves it until the
+next-morning report replaces it; checking KXSNOWCITIES-26NOV15 on its last day
+would otherwise have read Nov 15's 4 pm values as final. Such values, and any
+day that has not ended, now count as missing in both sources. In history one
+day is affected (KDCA 2026-02-21, final report never parsed by IEM); ACIS fills
+it with the same 0.0, and replication is unchanged (389 reproduced, 0
+contradicted). This season's rule text names stations as "City (KXXX)"; both
+that and the old CLI product id are read. `settle-check --include-open` computes
+markets that have not settled, without scoring them.
+
+**D-033. First full logging day (2026-11-15) is clean after D-028.** 288 of 288
+base cycles, no gaps, no alert. All 13 error rows that day (6 market-snapshot
+429s, 4 trade fetches, 3 discovery) are before the 06:56 UTC redeploy; none
+after. pm-weather has used $0.05 in its first 1.5 days of the billing period
+(account total $4.14), in line with the ~$1 a month estimate.
