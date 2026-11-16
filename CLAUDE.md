@@ -57,7 +57,9 @@ make report         # daily logger report (yesterday UTC)
 make settle-check SERIES=all        # or one series, e.g. KXNYCSNOWM
 make nbm nbs climo  # pull and parse NBM bulletins and station climatology (resumable)
 make p2a            # experiment P2A: observed table, forecasts (no prices), scoring
-make pull-data      # copy the Railway bucket to ./data/bucket
+make pull-data      # copy the Railway bucket to ./data/bucket (PREFIX=raw/ercot for part)
+uv run pmw ercot-build              # ERCOT tables from the pulled archive
+uv run pmw ercot-settle-check       # replicate every settled KXTXERCOTPEAKD market
 ```
 
 Environment: Python 3.12 via `uv`; versions pinned in `uv.lock`. Core
@@ -73,12 +75,12 @@ docs/         decisions, preregistration, settlement_rules, data_sources, deploy
 src/pmw/
   markets/    kalshi.py (public client), fees.py
   weather/    iem_cli.py (NWS CLI via IEM), acis.py (second source), nbm_text.py (NBM bulletins)
-  energy/     ERCOT (Phase 3)
+  energy/     ercot.py (API client, parsers), jobs.py (Railway probe/backfill), build.py
   logger/     discovery, schemas, buffer, runner, report
-  settle/     snow.py (SNOWOVERTIME replication)
+  settle/     snow.py (SNOWOVERTIME), ercot.py (KXTXERCOTPEAKD)
   features/   nbm_table.py (parsed NBM forecast periods)
   models/     nbm_composite.py (observed + NBM + climatology, Monte Carlo)
-  eval/       p2a.py (forecasts at decision times), p2a_score.py (registered scoring)
+  eval/       p2a.py, p2a_score.py (P2A); p3a.py, p3a_score.py (P3A, ERCOT)
   backtest/   (later phase, empty)
   utils/      timeutil, storage, config
 scripts/      pull_data.py, views.sql (DuckDB view layer)
@@ -134,6 +136,24 @@ data/         gitignored: raw/ interim/ processed/ live/
   "Actual System Load by Forecast Zone" report (NP6-346-CD) for the operating
   day. Hourly averages, not 5-minute readings. The event ticker's date is the
   day AFTER the operating day (`KXTXERCOTPEAKD-26NOV15` is about Nov 14).
+- `KXTXERCOTPEAK` (calendar-year peak) is a different contract: it settles on
+  ERCOT's official SETTLED peak, not the first report. Context only.
+- NWS publishes an intraday CLI around 4-5 pm local; IEM serves it until the
+  final report. A CLI value issued before its climate day ended is not final
+  (`pmw.settle.snow.final_only`, D-032).
+
+**ERCOT API**
+- Client `src/pmw/energy/ercot.py`: B2C ROPC id token + primary
+  `Ocp-Apim-Subscription-Key`, paced at 24 requests/minute. It refuses to run
+  unless `RAILWAY_REPLICA_REGION` starts with `us-` (a deployed Railway
+  replica). `railway run` executes on the laptop and does not qualify.
+- Archives (every posted version, `docId` + `postDatetime` in Central time) go
+  back to June 2017 for NP6-346-CD (actuals) and NP3-565-CD (forecasts).
+- Real CSV layouts: NP6-346-CD `OperDay,HourEnding,NORTH,SOUTH,WEST,HOUSTON,
+  TOTAL,DSTFlag`; NP3-565-CD `DeliveryDate,HourEnding,<8 weather zones>,
+  SystemTotal,Model,InUseFlag,DSTFlag`, 8 models x 192 hours per posting.
+- Kalshi daily ERCOT markets open 23:00 CT the evening before the operating day
+  and close 23:55 CT on it; Kalshi settles 7 to 12.5 hours after close.
 
 **NBM**
 - Station text bulletins are archived per cycle on AWS; `pmw nbm-pull` and
@@ -159,6 +179,9 @@ data/         gitignored: raw/ interim/ processed/ live/
    tested prospectively on live-logged data (P2A-S). Do not re-run or retune P2A:
    it is done; anything further is a new, separately registered experiment.
 3. ERCOT go/no-go (needs volume of about $20k/day on stressed days as well).
+   In progress since 2026-11-15: rules written up, client built, `ercot-jobs`
+   service live (D-035), archives backfilled from 2017. Experiment P3A in
+   `docs/preregistration.md`; scoring code in `src/pmw/eval/p3a_score.py`.
 4. Modeling, only if a gate passes.
 5. Paper trading, then tiny live with hard caps and a kill switch, only on
    written approval.
@@ -169,7 +192,8 @@ One combined risk layer caps total cold-weather exposure across both.
 ## Hosting
 
 Railway, Hobby plan, project `pm-weather`, US East: service `logger` (always
-on), cron service `daily-report`, bucket `pmw-data`. The $5 monthly credit is
+on), cron service `daily-report`, one-shot service `ercot-jobs` (the only one
+holding ERCOT credentials), bucket `pmw-data`. The $5 monthly credit is
 shared with the owner's other projects (Zenith, uscom-logger): never touch
 those, and keep this project lean. Total account overage is acceptable up to
 about $10 a month. Deploy with `railway up --service logger` from this folder;
