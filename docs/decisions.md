@@ -258,3 +258,9 @@ Every settled KXTXERCOTPEAKD market reproduces; Kalshi's recorded values match
 ours at their displayed precision (5 days are shown truncated or rounded). The
 settlement gate (rule 6) is met for the P3A sample. NP3-565-CD forecasts are
 backfilled for postings at 23, 05, 09, 13 and 16 CT only.
+
+**D-037. Forecast backfill crashed once on bucket throttling; resumed.** At
+02:45 UTC 2026-11-16 the NP3-565-CD backfill (at 2019-11) died when the Railway
+bucket answered one upload with `SLOW_DOWN`; ERCOT itself was fine. ERCOT jobs
+now retry bucket operations with backoff (2 s doubling to 60 s, 8 attempts).
+Resumed at 04:01 UTC from 2019-11-01; documents already stored were skipped.
