@@ -179,6 +179,101 @@ split by NBM version. Test winter held out: 2025-26, touched once.
 
 ---
 
+## Experiment P3A: Kalshi ERCOT daily peak versus ERCOT's own load forecast
+
+**Status: DRAFT 2026-11-16.** To be frozen before any forecast is joined to a
+price or any forecast for an operating day in the test period is built.
+
+What has been looked at before drafting: the rule text, results and expiration
+values of every settled KXTXERCOTPEAKD market (to check our reading of the
+contract); volume per event; ERCOT archive extent and one NP6-346-CD and one
+NP3-565-CD document (format only). No forecast has been joined to a price and
+no forecast has been scored against an outcome.
+
+### Question
+
+At fixed times on the operating day, is the Kalshi mid a better, equal or worse
+probability forecast of "first-complete NP6-346-CD daily peak above the strike"
+than a probability built from ERCOT's own published seven-day load forecast?
+
+### Sample (fixed before analysis)
+
+- Markets: every settled KXTXERCOTPEAKD market with operating day 2026-08-28
+  to 2026-11-15 whose settlement we reproduce from first-complete NP6-346-CD
+  peaks. Markets we cannot reproduce are listed with reasons before scoring and
+  excluded.
+- Observations: one per (market, decision time) where the last hourly candle
+  ending at or before the decision time is two-sided (bid >= 0.01, ask <= 0.99,
+  ask > bid) with spread at most 0.20.
+- Decision times: 00:00, 06:00, 10:00 and 14:00 Central prevailing time on the
+  operating day (markets open 23:00 CT the evening before and close 23:55 CT).
+
+### Forecasts being compared
+
+1. **Market:** mid of that candle's closing bid and ask.
+2. **ERCOT forecast probability:** take the latest NP3-565-CD posting whose
+   `postDatetime` is before the decision time (postings kept at 23:30 the
+   evening before, 05:30, 09:30 and 13:30 CT). F = the maximum hourly
+   `SystemTotal` of the model flagged `InUseFlag = Y` over the operating day.
+   Error ratio r = A / F, where A is the first-complete NP6-346-CD peak.
+   **Training set:** every operating day from 2017-07-01 to 2026-08-27 (before
+   the first Kalshi market), same posting slot, day of year within 30 days of
+   the target day (circular). P(peak > K) = share of training ratios r with
+   F x r > K. No parameter is fitted on Kalshi prices or test-period outcomes.
+
+### Primary metric
+
+`D = Brier(market) - Brier(ERCOT forecast)` over all observations; positive D
+means the ERCOT forecast is more accurate. 95% interval: block bootstrap, one
+block per ISO calendar week (Central time), 10,000 resamples, seed 20261116.
+
+### Secondary metrics (reported, not decisive alone)
+
+Log loss (probabilities clipped to [0.01, 0.99]); reliability and Murphy
+decomposition; D by decision time; D on the 20% of operating days with the
+highest peaks; a 17:00 CT decision time using the 16:30 posting, reported
+separately; taker simulation at tau = 0.10 (also 0.05, 0.15) after fees, with
+the P2A rules (size = 10% of the candle hour's volume, at most 250 contracts per
+market and 1,000 per event per day); perceived versus realized edge.
+Sensitivity: training on the last three pre-Kalshi years only
+(2023-08-28 to 2026-08-27).
+
+### Capacity (Phase 3 gate)
+
+"About $20k a day on stressed days." Stressed days: the 20% of operating days in
+the sample with the highest first-complete peak. Volume: contracts traded per
+event (each contract pays $1), from Kalshi's market records. Gate met if the
+median stressed day traded at least 20,000 contracts. The dollar premium
+(contracts x price) is reported alongside.
+
+### Decision rule
+
+| Outcome | Condition | Action |
+| - | - | - |
+| **GO** | 95% CI for D entirely above 0, AND tau = 0.10 taker P&L above 0 in at least 90% of resamples, AND the capacity gate is met | Phase 4 for ERCOT: model design, then paper trading design. |
+| **NO GO** | 95% CI for D entirely below 0, AND taker P&L above 0 in fewer than 50% of resamples | The market already beats ERCOT's own forecast. No ERCOT model; keep logging. |
+| **CONDITIONAL** | Anything else, including a CI spanning 0, a sign change across the spread sensitivities (0.10 / 0.30) or the training sensitivity, or accuracy and P&L passing with capacity failing | Prospective test on live-logged books through summer 2027 (P3A-S, registered separately). Phase 4 only with a specific, documented forecast weakness. |
+
+### Power, stated honestly
+
+About 78 operating days in about 12 calendar weeks. Weekly blocks are the honest
+unit (weather regimes last days), and with about 12 blocks percentile
+intervals tend to be too narrow, not too wide. Only a large difference (several
+hundredths of Brier score) could be detected. The busy summer days are only the
+first five weeks of the sample.
+
+### Guardrails
+
+- Automated leakage test: every posting used has `postDatetime` before the
+  decision time; every training day is before 2026-08-28.
+- The scoring code runs on a synthetic data set with a known answer before it
+  runs on real prices.
+- The strata and sensitivities above are the complete list. Anything else is
+  exploratory.
+- Results are written to `docs/findings/` whatever they show.
+
+---
+
 ## Results
 
 - **P2A, run 2026-11-15 21:04 UTC: CONDITIONAL.** D = -0.0103 [-0.0167, -0.0029]
