@@ -17,8 +17,11 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
+from functools import partial
 from typing import Any
 
 import pyarrow as pa
@@ -29,6 +32,30 @@ from pmw.utils.storage import Storage
 log = logging.getLogger(__name__)
 
 RAW_ROOT = "raw/ercot"
+STORAGE_ATTEMPTS = 8
+
+
+def with_retry(
+    op: Callable[[], Any], what: str, sleep: Callable[[float], None] = time.sleep
+) -> Any:
+    """Run a bucket operation, backing off when the bucket throttles (SLOW_DOWN).
+
+    On 2026-11-16 the NP3-565-CD backfill died on one throttled upload. Waits
+    2, 4, 8, ... 60 s, about 4 minutes in all, then gives up.
+    """
+    delay = 2.0
+    for attempt in range(1, STORAGE_ATTEMPTS + 1):
+        try:
+            return op()
+        except OSError as exc:
+            if attempt == STORAGE_ATTEMPTS:
+                raise
+            log.warning("storage retry #%d on %s after %s", attempt, what, str(exc)[:200])
+            sleep(delay)
+            delay = min(delay * 2, 60.0)
+    raise AssertionError("unreachable")
+
+
 MANIFEST_SCHEMA = pa.schema(
     [
         ("emil", pa.string()),
@@ -79,7 +106,7 @@ def probe(client: ErcotPublic, storage: Storage, emils: list[str]) -> dict[str, 
             sample = ends[-1]
             data = client.download(emil, [sample.doc_id])[sample.doc_id]
             path = f"{RAW_ROOT}/probe/{emil}_{sample.doc_id}.zip"
-            storage.write_bytes(path, data)
+            with_retry(partial(storage.write_bytes, path, data), path)
             info.update(sample_doc=sample.doc_id, sample_bytes=len(data), sample_path=path)
             info["sample_name"] = sample.friendly_name
         out[emil] = info
@@ -113,13 +140,17 @@ def backfill(
         if post_hours is not None:
             docs = [d for d in docs if d.post_datetime_utc.astimezone(CENTRAL).hour in post_hours]
         stats["kept"] += len(docs)
-        todo = [d for d in docs if not storage.exists(doc_path(d))]
+        todo = [
+            d for d in docs if not with_retry(partial(storage.exists, doc_path(d)), doc_path(d))
+        ]
         stats["already_had"] += len(docs) - len(todo)
         fetched = datetime.now(UTC)
         if todo:
             files = client.download(emil, [d.doc_id for d in todo])
             for d in todo:
-                stats["bytes"] += storage.write_bytes(doc_path(d), files[d.doc_id])
+                stats["bytes"] += with_retry(
+                    partial(storage.write_bytes, doc_path(d), files[d.doc_id]), doc_path(d)
+                )
             stats["downloaded"] += len(todo)
         _write_manifest(storage, emil, docs, fetched)
         log.info("backfill %s %s: %s", emil, f"{m0:%Y-%m}", stats)
@@ -134,7 +165,7 @@ def _write_manifest(storage: Storage, emil: str, docs: list[ArchiveDoc], fetched
     for month, items in by_month.items():
         path = manifest_path(emil, month)
         rows: dict[int, dict[str, Any]] = {}
-        if storage.exists(path):
+        if with_retry(partial(storage.exists, path), path):
             for r in storage.read_parquet(path).to_pylist():
                 rows[r["doc_id"]] = r
         for d in items:
@@ -155,4 +186,4 @@ def _write_manifest(storage: Storage, emil: str, docs: list[ArchiveDoc], fetched
             sorted(rows.values(), key=lambda r: (r["post_datetime_utc"], r["doc_id"])),
             schema=MANIFEST_SCHEMA,
         )
-        storage.write_parquet(path, table)
+        with_retry(partial(storage.write_parquet, path, table), path)

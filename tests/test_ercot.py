@@ -459,3 +459,20 @@ def test_in_use_peak_is_built_hour_by_hour():
     inuse = in_use_daily_peaks(rows)
     single = forecast_daily_peaks(rows)
     assert inuse and all(inuse[d] == single[(d, "X")] for d in inuse)
+
+
+def test_bucket_writes_retry_on_throttling():
+    from pmw.energy.jobs import with_retry
+
+    calls, waits = [], []
+
+    def flaky() -> int:
+        calls.append(1)
+        if len(calls) < 3:
+            raise OSError("AWS Error SLOW_DOWN during UploadPart operation")
+        return 7
+
+    assert with_retry(flaky, "x", sleep=waits.append) == 7
+    assert waits == [2.0, 4.0]
+    with pytest.raises(OSError):
+        with_retry(lambda: (_ for _ in ()).throw(OSError("down")), "x", sleep=lambda s: None)
