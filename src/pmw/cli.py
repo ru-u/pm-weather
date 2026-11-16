@@ -279,16 +279,65 @@ def ercot_build(
     root: str = typer.Option("data/bucket", help="Local copy of the bucket (make pull-data)"),
     out: str = typer.Option("data/interim/ercot", help="Output directory"),
     forecasts: bool = typer.Option(True, help="Also build forecast tables"),
+    telemetry: bool = typer.Option(True, help="Also build real-time load tables (NP3-910-ER)"),
+    actuals: bool = typer.Option(True, help="Build actual-load tables"),
 ) -> None:
-    """Build ERCOT actual-load and forecast tables from the pulled raw archive (laptop)."""
+    """Build ERCOT actual-load, forecast and telemetry tables from the pulled archive (laptop)."""
     from pathlib import Path
 
-    from pmw.energy.build import build_actuals, build_forecasts
+    from pmw.energy.build import build_actuals, build_forecasts, build_telemetry
 
     _setup_logging()
-    typer.echo(json.dumps({"actuals": build_actuals(Path(root), Path(out))}, indent=1))
+    if actuals:
+        typer.echo(json.dumps({"actuals": build_actuals(Path(root), Path(out))}, indent=1))
     if forecasts:
         typer.echo(json.dumps({"forecasts": build_forecasts(Path(root), Path(out))}, indent=1))
+    if telemetry:
+        typer.echo(json.dumps({"telemetry": build_telemetry(Path(root), Path(out))}, indent=1))
+
+
+@app.command("ercot-model")
+def ercot_model(
+    interim: str = typer.Option("data/interim/ercot"),
+    rebuild: bool = typer.Option(False, help="Rebuild the feature dataset"),
+) -> None:
+    """Phase 4: fit the ERCOT peak models on train, compare on calib and validation (no prices)."""
+    from datetime import date as _d
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw.models import ercot_peak as ep
+
+    _setup_logging()
+    root = Path(interim)
+    cache = root / "peak_dataset.parquet"
+    t = ep.Tables.load(root)
+    if rebuild or not cache.exists():
+        ds = ep.build_dataset(t, _d(2017, 7, 1), ep.VALID_END)
+        ds.to_parquet(cache)
+    ds = pd.read_parquet(cache)
+    ds["oper_day"] = pd.to_datetime(ds["oper_day"]).dt.date
+    leak = int(
+        (pd.to_datetime(ds["post_utc"], utc=True) >= pd.to_datetime(ds["t"], utc=True)).sum()
+    )
+    parts = ep.split(ds)
+    gap = ep.telemetry_gap(t, ep.TRAIN_END)
+    lgbm = ep.LGBMConformal().fit(parts["train"], parts["calib"])
+    models: dict[str, object] = {
+        "baseline_p3a": ep.Baseline().fit(parts["train"], parts["calib"]),
+        "ngboost": ep.NGBoostNormal().fit(parts["train"], parts["calib"]),
+        "lgbm_cqr": lgbm,
+    }
+    report = {
+        "rows": {k: len(v) for k, v in parts.items()},
+        "leakage_posting_not_before_t": leak,
+        "telemetry_gap_median_pct": round(100 * float(pd.Series(gap).median()), 3),
+        "valid": ep.evaluate(models, parts["valid"], gap),
+        "lgbm_interval_coverage_valid": ep.interval_coverage(lgbm, parts["valid"]),
+    }
+    (root / "peak_model_report.json").write_text(json.dumps(report, indent=1, default=str))
+    typer.echo(json.dumps(report, indent=1, default=str))
 
 
 @app.command("ercot-settle-check")

@@ -364,6 +364,76 @@ def forecast_daily_peaks(rows: list[ForecastHour]) -> dict[tuple[date, str], Dec
     return out
 
 
+# ---------------------------------------------------------------------------
+# NP3-910-ER: 2-Day Aggregated Load Summary (5-minute real-time telemetry)
+# ---------------------------------------------------------------------------
+
+REAL_TIME_LOAD = "np3-910-er"
+AGG_ZONES = ("Houston", "North", "South", "West")
+AGG_COLUMNS = (
+    "SCED Time Stamp", "Repeated Hour Flag", "SUM TELEM GEN MW", "SUM TELEM DCTIE MW",
+    "AGG LOAD SUMMARY",
+)  # fmt: skip
+
+
+@dataclass(frozen=True)
+class TelemetryPoint:
+    ts_local: datetime  # Central prevailing time, naive
+    repeated: bool  # second pass through the fall-back hour
+    system: float
+    zones: dict[str, float | None]
+
+    @property
+    def ts_utc(self) -> datetime:
+        aware = self.ts_local.replace(tzinfo=CENTRAL, fold=1 if self.repeated else 0)
+        return aware.astimezone(ZoneInfo("UTC"))
+
+    @property
+    def oper_day(self) -> date:
+        return self.ts_local.date()
+
+    @property
+    def hour_ending(self) -> int:
+        return self.ts_local.hour + 1
+
+
+def _agg_rows(text: str) -> dict[tuple[datetime, bool], float]:
+    reader = csv.reader(io.StringIO(text))
+    header = tuple(h.strip() for h in next(reader))
+    if header != AGG_COLUMNS:
+        raise ValueError(f"unexpected NP3-910-ER header {list(header)}")
+    out = {}
+    for rec in reader:
+        if not rec or not rec[0].strip():
+            continue
+        ts = datetime.strptime(rec[0].strip(), "%m/%d/%Y %H:%M:%S")  # noqa: DTZ007 - local
+        out[(ts, _flag(rec[1]))] = float(rec[4])
+    return out
+
+
+def parse_agg_load_summary(doc_zip: bytes) -> list[TelemetryPoint]:
+    """System and zone telemetered load, one point per SCED run (about every 5 minutes)."""
+    with zipfile.ZipFile(io.BytesIO(doc_zip)) as z:
+        names = z.namelist()
+
+        def find(suffix: str) -> str | None:
+            hits = [n for n in names if n.lower().startswith(f"2d_agg_load_summary{suffix}-")]
+            return hits[0] if len(hits) == 1 else None
+
+        system_name = find("")
+        if system_name is None:
+            raise ValueError(f"no system load summary in document: {names}")
+        system = _agg_rows(z.read(system_name).decode("utf-8-sig"))
+        zones = {}
+        for zone in AGG_ZONES:
+            name = find(f"_{zone.lower()}")
+            zones[zone] = _agg_rows(z.read(name).decode("utf-8-sig")) if name else {}
+    return [
+        TelemetryPoint(ts, rep, val, {zone: zones[zone].get((ts, rep)) for zone in AGG_ZONES})
+        for (ts, rep), val in sorted(system.items())
+    ]
+
+
 IN_USE = "INUSE"  # pseudo-model: the flagged model's value, hour by hour
 
 

@@ -476,3 +476,20 @@ def test_bucket_writes_retry_on_throttling():
     assert waits == [2.0, 4.0]
     with pytest.raises(OSError):
         with_retry(lambda: (_ for _ in ()).throw(OSError("down")), "x", sleep=lambda s: None)
+
+
+def test_real_np3_910_telemetry():
+    from pmw.energy.ercot import parse_agg_load_summary
+
+    pts = parse_agg_load_summary((FIXTURES / "ercot_np3-910-er_20261113.zip").read_bytes())
+    assert 280 <= len(pts) <= 300  # one SCED run about every 5 minutes
+    assert {p.oper_day for p in pts} == {date(2026, 11, 13)}
+    first = pts[0]
+    assert first.ts_local == datetime(2026, 11, 13, 0, 0, 22)  # noqa: DTZ001 - naive local by design
+    assert first.hour_ending == 1
+    assert first.system == pytest.approx(45053.4635)
+    assert first.zones["Houston"] == pytest.approx(8350.29291)
+    # Zones sum close to the system total (DC ties and rounding aside).
+    zsum = sum(v for v in first.zones.values() if v is not None)
+    assert abs(zsum / first.system - 1) < 0.05
+    assert first.ts_utc == datetime(2026, 11, 13, 6, 0, 22, tzinfo=UTC)

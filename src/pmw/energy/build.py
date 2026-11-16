@@ -21,6 +21,7 @@ Outputs under data/interim/ercot/:
 from __future__ import annotations
 
 import logging
+import zipfile
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -33,16 +34,19 @@ import pyarrow.parquet as pq
 
 from pmw.energy.ercot import (
     ACTUAL_LOAD_BY_FORECAST_ZONE,
+    AGG_ZONES,
     CENTRAL,
     FZN_ZONES,
     IN_USE,
     LOAD_FORECAST_BY_WEATHER_ZONE,
+    REAL_TIME_LOAD,
     LoadHour,
     daily_peak,
     expected_hours,
     forecast_daily_peaks,
     in_use_daily_peaks,
     is_complete,
+    parse_agg_load_summary,
     parse_load_by_forecast_zone_csv,
     parse_load_forecast_csv,
     read_doc_csv,
@@ -224,4 +228,85 @@ def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
         - len({r["doc_id"] for r in peaks_rows if r["in_use"]}),
         "postings": len(docs) - bad,
         "forecast_peak_rows": len(peaks_rows),
+    }
+
+
+def build_telemetry(root: Path, out: Path) -> dict[str, Any]:
+    """5-minute real-time load (NP3-910-ER) and its hourly averages.
+
+    In history this stands in for what ERCOT's public dashboard showed live. The
+    hourly averages are compared with the settled NP6-346-CD hourly TOTAL on the
+    overlap, so the model's "load so far" error is known.
+    """
+    docs = manifest_docs(root, REAL_TIME_LOAD)
+    seen: set[tuple[datetime, bool]] = set()
+    points: list[dict[str, Any]] = []
+    bad = 0
+    for d in docs:
+        try:
+            pts = parse_agg_load_summary(d.path.read_bytes())
+        except (ValueError, KeyError, zipfile.BadZipFile) as exc:
+            bad += 1
+            log.warning("doc %s unreadable: %s", d.doc_id, exc)
+            continue
+        for p in pts:
+            key = (p.ts_local, p.repeated)
+            if key in seen:
+                continue
+            seen.add(key)
+            points.append(
+                {
+                    "ts_utc": p.ts_utc,
+                    "oper_day": p.oper_day,
+                    "hour_ending": p.hour_ending,
+                    "repeated": p.repeated,
+                    "system": p.system,
+                    **{z.lower(): p.zones[z] for z in AGG_ZONES},
+                }
+            )
+    out.mkdir(parents=True, exist_ok=True)
+    five = pa.Table.from_pylist(sorted(points, key=lambda r: r["ts_utc"]))
+    pq.write_table(five, out / "telemetry_5min.parquet")
+
+    hourly: dict[tuple[date, int, bool], list[float]] = defaultdict(list)
+    for r in points:
+        hourly[(r["oper_day"], r["hour_ending"], r["repeated"])].append(r["system"])
+    hourly_rows = [
+        {
+            "oper_day": k[0],
+            "hour_ending": k[1],
+            "repeated": k[2],
+            "mean_load": sum(v) / len(v),
+            "n": len(v),
+        }
+        for k, v in sorted(hourly.items())
+    ]
+    pq.write_table(pa.Table.from_pylist(hourly_rows), out / "telemetry_hourly.parquet")
+
+    gap: list[float] = []
+    settled = out / "hourly_load.parquet"
+    if settled.exists():
+        tot = {
+            (r["oper_day"], r["hour_ending"], r["repeated"]): r["total"]
+            for r in pq.read_table(settled).to_pylist()
+        }
+        for r in hourly_rows:
+            t = tot.get((r["oper_day"], r["hour_ending"], r["repeated"]))
+            n = int(r["n"])  # type: ignore[call-overload]
+            if t and n >= 10:
+                gap.append(float(r["mean_load"]) / t - 1)  # type: ignore[arg-type]
+    gap.sort()
+    return {
+        "documents": len(docs),
+        "unreadable": bad,
+        "points": len(points),
+        "days": len({r["oper_day"] for r in points}),
+        "hours_compared_with_settled": len(gap),
+        "telemetry_vs_settled_median_pct": round(100 * gap[len(gap) // 2], 3) if gap else None,
+        "telemetry_vs_settled_p05_p95_pct": [
+            round(100 * gap[int(0.05 * len(gap))], 3),
+            round(100 * gap[int(0.95 * len(gap))], 3),
+        ]
+        if gap
+        else None,
     }
