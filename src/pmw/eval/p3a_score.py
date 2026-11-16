@@ -24,7 +24,7 @@ from pmw.settle import ercot as se
 CT = ZoneInfo("America/Chicago")
 TRAIN_START = date(2017, 7, 1)
 TEST_START = date(2026, 8, 28)  # first operating day with a Kalshi market
-TEST_END = date(2026, 11, 15)
+TEST_END = date(2026, 11, 14)  # last operating day settled at freezing
 SENS_TRAIN_START = date(2023, 8, 28)
 DOY_WINDOW = 30
 SLOTS = (23, 5, 9, 13, 16)  # Central hour of the postings kept (23 = evening before)

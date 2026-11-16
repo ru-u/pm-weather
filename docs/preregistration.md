@@ -181,8 +181,11 @@ split by NBM version. Test winter held out: 2025-26, touched once.
 
 ## Experiment P3A: Kalshi ERCOT daily peak versus ERCOT's own load forecast
 
-**Status: DRAFT 2026-11-16.** To be frozen before any forecast is joined to a
-price or any forecast for an operating day in the test period is built.
+**Status: FROZEN 2026-11-16 02:45 UTC**, before any NP3-565-CD forecast was
+parsed, before any forecast was joined to a price, and before any forecast was
+scored against an outcome. Design choices were made by Claude while the owner
+was away (the owner asked for work to continue); the owner may review them, and
+any change from here on is a deviation logged at the bottom.
 
 What has been looked at before drafting: the rule text, results and expiration
 values of every settled KXTXERCOTPEAKD market (to check our reading of the
@@ -199,7 +202,7 @@ than a probability built from ERCOT's own published seven-day load forecast?
 ### Sample (fixed before analysis)
 
 - Markets: every settled KXTXERCOTPEAKD market with operating day 2026-08-28
-  to 2026-11-15 whose settlement we reproduce from first-complete NP6-346-CD
+  to 2026-11-14 (the last settled day at freezing) whose settlement we reproduce from first-complete NP6-346-CD
   peaks. Markets we cannot reproduce are listed with reasons before scoring and
   excluded.
 - Observations: one per (market, decision time) where the last hourly candle
@@ -279,6 +282,25 @@ Primary sample at spread 0.20: about 1,551 observations, 76 operating days,
 12 ISO weeks. The books are nearly empty just after the 23:00 CT open, and by
 17:00 most markets are one-sided (decided or abandoned), which is why 17:00 is
 secondary only. No design choice was changed after seeing these numbers.
+
+### Implementation clarifications (2026-11-16, at freezing)
+
+1. Settlement replication (rule 6) passed before freezing: 1,334 of 1,334
+   (D-036). No market is excluded.
+2. The forecast for a decision time is the latest in-use posting for that
+   operating day posted strictly before it. If that posting is not one of the
+   kept slots (for example the 23:30 posting is missing, so the latest is the
+   previous afternoon's), the observation is dropped, not filled.
+3. Training ratios use, per (operating day, slot), the latest posting in that
+   slot, and the first-complete NP6-346-CD peak as A. Training days with no
+   in-use posting in a slot are skipped.
+4. The quote is the hourly candle whose end time equals the decision time,
+   closing bid and ask; the taker's volume is that candle's volume.
+5. Capacity uses each market's total `volume_fp`; the dollar premium is
+   approximated with the market's last price and is descriptive only.
+6. Code: `src/pmw/eval/p3a_score.py`, synthetic known-answer runs in
+   `tests/test_p3a.py` (GO, capacity-limited CONDITIONAL and NO GO all come out
+   as constructed). Run once with `uv run pmw p3a`.
 
 ### Guardrails
 
