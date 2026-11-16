@@ -331,3 +331,42 @@ def test_kalshis_own_values_reproduce_every_result():
     assert settle_ercot.summarize(settle_ercot.check_markets(ERCOT_MARKETS, {}))["no_data"] == len(
         ERCOT_MARKETS
     )
+
+
+# ---- jobs: backfill is verbatim and resumable ----
+
+
+def test_backfill_saves_verbatim_and_resumes(tmp_path, no_sleep):
+    from pmw.energy import jobs
+    from pmw.utils.storage import Storage
+
+    storage = Storage.local(tmp_path)
+    fake = FakeErcot()
+    c = make_client(fake)
+    stats = jobs.backfill(c, storage, "np6-346-cd", date(2026, 11, 1), date(2026, 11, 30))
+    assert stats["downloaded"] == 2 and stats["already_had"] == 0
+    files = [f.path for f in storage.list("raw/ercot/np6-346-cd")]
+    assert "raw/ercot/np6-346-cd/2026/11/101.zip" in files
+    assert "raw/ercot/np6-346-cd/manifest/2026-11.parquet" in files
+    saved = storage.read_bytes("raw/ercot/np6-346-cd/2026/11/101.zip")
+    assert read_doc_csv(saved)[1].startswith(HEADER)  # the document exactly as served
+    # A second run lists again but downloads nothing.
+    downloads_before = sum(r.method == "POST" and "download" in str(r.url) for r in fake.calls)
+    again = jobs.backfill(c, storage, "np6-346-cd", date(2026, 11, 1), date(2026, 11, 30))
+    assert again["downloaded"] == 0 and again["already_had"] == 2
+    assert (
+        sum(r.method == "POST" and "download" in str(r.url) for r in fake.calls) == downloads_before
+    )
+    manifest = storage.read_parquet("raw/ercot/np6-346-cd/manifest/2026-11.parquet").to_pylist()
+    assert [r["doc_id"] for r in manifest] == [101, 102]
+
+
+def test_backfill_post_hour_filter(tmp_path, no_sleep):
+    from pmw.energy import jobs
+    from pmw.utils.storage import Storage
+
+    c = make_client(FakeErcot())
+    stats = jobs.backfill(
+        c, Storage.local(tmp_path), "np6-346-cd", date(2026, 11, 1), date(2026, 11, 30), {6}
+    )
+    assert stats["listed"] == 2 and stats["kept"] == 0 and stats["downloaded"] == 0

@@ -227,6 +227,53 @@ def settle_check(
         raise typer.Exit(1)
 
 
+def _ercot_client():  # type: ignore[no-untyped-def]
+    """ERCOT client from environment credentials. Refuses to run off Railway US."""
+    from pmw.energy.ercot import ErcotCredentials, ErcotPublic
+
+    return ErcotPublic(ErcotCredentials.from_env())
+
+
+@app.command("ercot-probe")
+def ercot_probe(
+    emils: str = typer.Option("np6-346-cd,np3-565-cd", help="Comma-separated EMIL ids"),
+) -> None:
+    """[Railway only] Archive extent and document size per ERCOT product; saves one sample each."""
+    from pmw.energy.jobs import probe
+    from pmw.utils.storage import Storage
+
+    _setup_logging()
+    client = _ercot_client()
+    out = probe(client, Storage.from_env(), [e.strip() for e in emils.split(",") if e.strip()])
+    typer.echo(json.dumps(out, indent=1))
+    typer.echo(f"requests: {client.request_count}")
+    client.close()
+
+
+@app.command("ercot-backfill")
+def ercot_backfill(
+    emil: str = typer.Argument(..., help="EMIL id, e.g. np6-346-cd"),
+    start: str = typer.Argument(..., help="First POSTED date (Central), YYYY-MM-DD"),
+    end: str = typer.Argument(..., help="Last POSTED date (Central), YYYY-MM-DD"),
+    post_hours: str = typer.Option(
+        "", help="Keep only docs posted in these Central hours, e.g. 5,11,17"
+    ),
+) -> None:
+    """[Railway only] Save every posted version of an ERCOT report, verbatim. Resumable."""
+    from pmw.energy.jobs import backfill
+    from pmw.utils.storage import Storage
+
+    _setup_logging()
+    hours = {int(h) for h in post_hours.split(",") if h.strip()} or None
+    client = _ercot_client()
+    stats = backfill(
+        client, Storage.from_env(), emil, date.fromisoformat(start), date.fromisoformat(end), hours
+    )
+    typer.echo(json.dumps(stats))
+    typer.echo(f"requests: {client.request_count}")
+    client.close()
+
+
 @app.command("nbm-pull")
 def nbm_pull(
     start: str = typer.Argument(..., help="First UTC date, YYYY-MM-DD"),

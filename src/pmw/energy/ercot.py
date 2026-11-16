@@ -407,25 +407,40 @@ class ErcotPublic:
 
     # ---- archives ----
 
+    def archive_page(
+        self,
+        emil: str,
+        post_from: datetime,
+        post_to: datetime,
+        *,
+        page: int = 1,
+        size: int = ARCHIVE_PAGE_SIZE,
+    ) -> tuple[list[ArchiveDoc], int, int]:
+        """One page of documents posted in [post_from, post_to]: (docs, pages, records)."""
+        if post_from.tzinfo is None or post_to.tzinfo is None:
+            raise ValueError("archive needs timezone-aware datetimes")
+        resp = self._request(
+            "GET",
+            f"/archive/{emil}",
+            params={
+                # ERCOT filters on Central prevailing local time.
+                "postDatetimeFrom": post_from.astimezone(CENTRAL).strftime("%Y-%m-%dT%H:%M:%S"),
+                "postDatetimeTo": post_to.astimezone(CENTRAL).strftime("%Y-%m-%dT%H:%M:%S"),
+                "size": size,
+                "page": page,
+            },
+        )
+        payload = resp.json()
+        docs, pages = parse_archive_page(emil, payload)
+        records = int((payload.get("_meta") or {}).get("totalRecords") or len(docs))
+        return docs, pages, records
+
     def archive(self, emil: str, post_from: datetime, post_to: datetime) -> list[ArchiveDoc]:
         """Every document of `emil` posted in [post_from, post_to] (timezone-aware)."""
-        if post_from.tzinfo is None or post_to.tzinfo is None:
-            raise ValueError("archive() needs timezone-aware datetimes")
         docs: list[ArchiveDoc] = []
         page, pages = 1, 1
         while page <= pages:
-            resp = self._request(
-                "GET",
-                f"/archive/{emil}",
-                params={
-                    # ERCOT filters on Central prevailing local time.
-                    "postDatetimeFrom": post_from.astimezone(CENTRAL).strftime("%Y-%m-%dT%H:%M:%S"),
-                    "postDatetimeTo": post_to.astimezone(CENTRAL).strftime("%Y-%m-%dT%H:%M:%S"),
-                    "size": ARCHIVE_PAGE_SIZE,
-                    "page": page,
-                },
-            )
-            got, pages = parse_archive_page(emil, resp.json())
+            got, pages, _ = self.archive_page(emil, post_from, post_to, page=page)
             docs.extend(got)
             page += 1
         return docs

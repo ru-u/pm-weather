@@ -193,3 +193,22 @@ Account usage before this project was $3.96 for the billing period ending
 $5 to $6 a month in total, inside the $10 cap (D-018). Confirm with
 `railway usage projects` after a few days: the memory figure is from half an
 hour and may settle higher.
+
+## Proposed: `ercot-jobs` service (NOT created; awaiting owner approval, 2026-11-15)
+
+ERCOT calls must run from Railway US (CLAUDE.md rule 8), and ERCOT credentials
+must never sit on `logger` or `daily-report`. Plan:
+
+- New service `ercot-jobs` in project pm-weather, US East, same Dockerfile
+  (`RAILWAY_DOCKERFILE_PATH=Dockerfile`), restart policy NEVER, no cron at
+  first. Each job is one deploy with a start command, run to completion:
+  1. `pmw ercot-probe` (about 10 requests): archive extent and one real sample
+     document per product, saved to `raw/ercot/probe/`.
+  2. `pmw ercot-backfill np6-346-cd <first> <today>`: every posted version.
+  3. `pmw ercot-backfill np3-565-cd <first> <today> --post-hours ...`: forecast
+     versions at chosen hours (chosen after the probe shows document sizes).
+- Variables: the five `PMW_S3_*` bucket references (as for the logger) plus
+  `ERCOT_API_USERNAME`, `ERCOT_API_PASSWORD`, `ERCOT_PUBLIC_API_SUBSCRIPTION_KEY`
+  (primary key only; the secondary key stays off Railway).
+- Cost: seconds to minutes of CPU per job; the raw archive for NP6-346-CD is a
+  few MB. Forecast storage depends on the post-hour filter.

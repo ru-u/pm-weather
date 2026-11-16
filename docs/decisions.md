@@ -228,3 +228,18 @@ base cycles, no gaps, no alert. All 13 error rows that day (6 market-snapshot
 429s, 4 trade fetches, 3 discovery) are before the 06:56 UTC redeploy; none
 after. pm-weather has used $0.05 in its first 1.5 days of the billing period
 (account total $4.14), in line with the ~$1 a month estimate.
+
+**D-034. ERCOT client built and guarded; KXTXERCOTPEAK is not the target.**
+`src/pmw/energy/ercot.py` (token + primary subscription key, 2.5 s pacing,
+verbatim archive download) refuses to start outside a deployed Railway US
+replica. Its tests use synthetic documents in the documented layout because no
+real ERCOT response can be obtained before the `ercot-jobs` service exists; the
+first probe run saves real ones to replace them. On the Kalshi side, every one
+of the 1,334 settled KXTXERCOTPEAKD markets (78 operating days) parses, and
+Kalshi's own expiration values reproduce every result under strictly-greater,
+so replication reduces to matching our first-complete daily peak to Kalshi's
+value. KXTXERCOTPEAK-27JAN01 (calendar-year 2026 peak, about 1.06M contracts)
+settles on ERCOT's official settled peak, not the first report, has one
+outcome, and is nearly decided (all strikes at 2 to 3 cents): it is context
+for Phase 3, not a sample. Daily volume is concentrated in summer (median 18.9k
+contracts per event, but 21 to 1,094 per day on Nov 10 to 14).

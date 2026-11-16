@@ -107,13 +107,30 @@ Last reviewed: 2026-11-14.
   Climatology must be built from non-missing days only.
 - GHCN-Daily is no longer needed for this purpose.
 
-### ERCOT (not built yet)
+### ERCOT (client built 2026-11-15; no real call made yet)
 
-- Public API `api.ercot.com/api/public-reports`, or `gridstatus`. Needs an ID
-  token (username and password) plus the `Ocp-Apim-Subscription-Key` header.
-  About 30 requests/minute. Reportedly blocks non-US IPs, so it runs from Railway.
-- Settlement product: NP6-346-CD "Actual System Load by Forecast Zone", TOTAL
-  column, first complete report per operating day.
+- Public API `https://api.ercot.com/api/public-reports`, client in
+  `src/pmw/energy/ercot.py`. Two credentials are needed together: an ID token
+  from ERCOT's Azure B2C ROPC flow (username + password, about 1 hour) as a
+  Bearer token, and the subscription key as `Ocp-Apim-Subscription-Key`
+  (primary key only). Documented limit 30 requests/minute; we pace at 24.
+- Reportedly blocks non-US IPs. The client refuses to start outside a deployed
+  Railway replica whose `RAILWAY_REPLICA_REGION` starts with `us-`
+  (`railway run` executes locally and does not qualify).
+- Every report is archived per posted document (`docId`, `postDatetime` in
+  Central prevailing time): `GET /archive/{emil}` lists, `POST
+  /archive/{emil}/download` returns a zip of `<docId>.zip` files, one CSV each.
+  We save these verbatim, so every posted version is kept.
+- Settlement product: **NP6-346-CD** "Actual System Load by Forecast Zone".
+  CSV columns `OperDay, HourEnding ("01:00".."24:00"), NORTH, SOUTH, WEST,
+  HOUSTON, TOTAL, DSTFlag`. Taken from the published spec and gridstatus 0.37;
+  **not yet confirmed on a real file** (the first `pmw ercot-probe` run saves one).
+  The parser rejects any other header.
+- Forecast product: **NP3-565-CD** "Seven-Day Load Forecast by Model and Weather
+  Zone", posted hourly. How far back the archives go is unknown until the probe runs.
+- If the API archive is shorter than 7 years, settled hourly load back to 2002
+  is on ERCOT's "Hourly Load Data Archive" page (native load, final values,
+  not first versions). That is fine for modelling but not for settlement.
 
 ## Forecasts
 
