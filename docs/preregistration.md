@@ -262,6 +262,24 @@ intervals tend to be too narrow, not too wide. Only a large difference (several
 hundredths of Brier score) could be detected. The busy summer days are only the
 first five weeks of the sample.
 
+### Design facts (2026-11-16, quotes only, no forecast or outcome joined)
+
+Hourly candles for all 1,334 settled markets (1,221 from the live tier, 113
+historical). Share of (market, decision time) pairs with a usable quote:
+
+| CT hour | two-sided | spread <= 0.10 | <= 0.20 | <= 0.30 | median spread |
+| - | -: | -: | -: | -: | -: |
+| 00 | 0.56 | 0.05 | 0.11 | 0.15 | 0.82 |
+| 06 | 0.63 | 0.25 | 0.43 | 0.51 | 0.13 |
+| 10 | 0.63 | 0.26 | 0.43 | 0.50 | 0.14 |
+| 14 | 0.41 | 0.11 | 0.19 | 0.25 | 0.23 |
+| 17 | 0.10 | 0.05 | 0.06 | 0.06 | 0.13 |
+
+Primary sample at spread 0.20: about 1,551 observations, 76 operating days,
+12 ISO weeks. The books are nearly empty just after the 23:00 CT open, and by
+17:00 most markets are one-sided (decided or abandoned), which is why 17:00 is
+secondary only. No design choice was changed after seeing these numbers.
+
 ### Guardrails
 
 - Automated leakage test: every posting used has `postDatetime` before the
