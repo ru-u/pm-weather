@@ -243,3 +243,10 @@ settles on ERCOT's official settled peak, not the first report, has one
 outcome, and is nearly decided (all strikes at 2 to 3 cents): it is context
 for Phase 3, not a sample. Daily volume is concentrated in summer (median 18.9k
 contracts per event, but 21 to 1,094 per day on Nov 10 to 14).
+
+**D-035. Owner approved ERCOT credentials on a separate Railway service
+(2026-11-16).** Option (a): Claude creates `ercot-jobs` and sets
+`ERCOT_API_USERNAME`, `ERCOT_API_PASSWORD` and the primary
+`ERCOT_PUBLIC_API_SUBSCRIPTION_KEY` from `.env` with `railway variable set`,
+without printing values. The secondary key stays off Railway. `logger` and
+`daily-report` never get ERCOT credentials.

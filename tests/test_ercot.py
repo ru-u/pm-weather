@@ -1,11 +1,10 @@
-"""ERCOT client and NP6-346-CD parsing.
+"""ERCOT client and report parsing.
 
-SYNTHETIC FIXTURES: no real ERCOT response could be saved yet, because ERCOT
-calls run only from Railway (CLAUDE.md rule 8) and the ercot-jobs service does
-not exist yet. The CSVs and zips below follow the documented layout (ERCOT API
-spec bundled with gridstatus 0.37; NP6-346-CD archive CSV columns). The parser
-rejects any other header, so the first real download validates or breaks these
-assumptions loudly. Replace with saved real documents on the first Railway run.
+Real fixtures (saved by the first `pmw ercot-probe` run on Railway, 2026-11-16):
+  ercot_np6-346-cd_20261114.zip        NP6-346-CD for operating day 2026-11-14
+  ercot_np3-565-cd_20261115T1930.zip   NP3-565-CD posted 2026-11-15 19:30 CT
+The small synthetic CSVs below cover cases no single real file shows (DST days,
+partial and revised versions); their layout is copied from the real file.
 """
 
 from __future__ import annotations
@@ -370,3 +369,35 @@ def test_backfill_post_hour_filter(tmp_path, no_sleep):
         c, Storage.local(tmp_path), "np6-346-cd", date(2026, 11, 1), date(2026, 11, 30), {6}
     )
     assert stats["listed"] == 2 and stats["kept"] == 0 and stats["downloaded"] == 0
+
+
+# ---- real documents ----
+
+from .conftest import FIXTURES  # noqa: E402
+
+
+def test_real_np6_346_reproduces_kalshis_nov14_value():
+    name, text = read_doc_csv((FIXTURES / "ercot_np6-346-cd_20261114.zip").read_bytes())
+    assert name.endswith("ACTUALSYSLOADFZNP6346.csv")
+    rows = parse_load_by_forecast_zone_csv(text)
+    day = date(2026, 11, 14)
+    assert is_complete(rows, day)
+    # KXTXERCOTPEAKD-26NOV15 settled with expiration_value 51346.64.
+    assert daily_peak(rows, day) == D("51346.64")
+    kalshi = [m for m in ERCOT_MARKETS if m["event_ticker"] == "KXTXERCOTPEAKD-26NOV15"]
+    checks = settle_ercot.check_markets(kalshi, {day: daily_peak(rows, day)})
+    assert all(c.match and c.value_agrees for c in checks)
+
+
+def test_real_np3_565_forecast():
+    from pmw.energy.ercot import forecast_daily_peaks, parse_load_forecast_csv
+
+    _, text = read_doc_csv((FIXTURES / "ercot_np3-565-cd_20261115T1930.zip").read_bytes())
+    rows = parse_load_forecast_csv(text)
+    assert len(rows) == 8 * 192
+    assert {r.model for r in rows if r.in_use} == {"X"}
+    assert rows[0].delivery_day == date(2026, 11, 15) and rows[0].hour_ending == 1
+    peaks = forecast_daily_peaks(rows)
+    days = sorted({d for d, m in peaks if m == "X"})
+    assert days[0] == date(2026, 11, 15) and len(days) == 8
+    assert all(D(30000) < v < D(90000) for v in peaks.values())

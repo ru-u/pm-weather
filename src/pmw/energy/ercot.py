@@ -294,6 +294,77 @@ def daily_peak(rows: list[LoadHour], day: date) -> Decimal:
 
 
 # ---------------------------------------------------------------------------
+# NP3-565-CD: Seven-Day Load Forecast by Model and Weather Zone
+# ---------------------------------------------------------------------------
+
+LF_ZONES = (
+    "Coast", "East", "FarWest", "North", "NorthCentral", "SouthCentral", "Southern", "West",
+)  # fmt: skip
+LF_COLUMNS = (
+    "DeliveryDate",
+    "HourEnding",
+    *LF_ZONES,
+    "SystemTotal",
+    "Model",
+    "InUseFlag",
+    "DSTFlag",
+)
+
+
+@dataclass(frozen=True)
+class ForecastHour:
+    delivery_day: date
+    hour_ending: int
+    repeated: bool
+    model: str
+    in_use: bool  # the model ERCOT flags as in use for this posting
+    system_total: Decimal | None
+
+
+def parse_load_forecast_csv(text: str) -> list[ForecastHour]:
+    """Parse an NP3-565-CD CSV (one posting: every model, ~8 days hourly).
+
+    Only the columns we use are required; zone columns are not kept. Fails
+    loudly when a required column is absent.
+    """
+    reader = csv.reader(io.StringIO(text))
+    header = [h.strip() for h in next(reader)]
+    need = ("DeliveryDate", "HourEnding", "SystemTotal", "Model", "InUseFlag", "DSTFlag")
+    missing = [c for c in need if c not in header]
+    if missing:
+        raise ValueError(f"NP3-565-CD header lacks {missing}: {header}")
+    idx = {c: header.index(c) for c in need}
+    out = []
+    for rec in reader:
+        if not rec or not any(c.strip() for c in rec):
+            continue
+        out.append(
+            ForecastHour(
+                delivery_day=_us_date(rec[idx["DeliveryDate"]]),
+                hour_ending=_hour_ending(rec[idx["HourEnding"]]),
+                repeated=_flag(rec[idx["DSTFlag"]]),
+                model=rec[idx["Model"]].strip(),
+                in_use=_flag(rec[idx["InUseFlag"]]),
+                system_total=_decimal(rec[idx["SystemTotal"]]),
+            )
+        )
+    return out
+
+
+def forecast_daily_peaks(rows: list[ForecastHour]) -> dict[tuple[date, str], Decimal]:
+    """{(delivery day, model): max hourly SystemTotal} over days with every hour present."""
+    by: dict[tuple[date, str], list[ForecastHour]] = {}
+    for r in rows:
+        by.setdefault((r.delivery_day, r.model), []).append(r)
+    out = {}
+    for (day, model), hours in by.items():
+        totals = [h.system_total for h in hours if h.system_total is not None]
+        if len(totals) == expected_hours(day) == len(hours):
+            out[(day, model)] = max(totals)
+    return out
+
+
+# ---------------------------------------------------------------------------
 # HTTP client
 # ---------------------------------------------------------------------------
 
