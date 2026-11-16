@@ -275,3 +275,11 @@ contracts). As registered: no Phase 4 ERCOT model without a specific, documented
 forecast weakness; next ERCOT step is a prospective test on live-logged books
 through summer 2027 (P3A-S, to be registered). Both Phase 2 and Phase 3 now say
 the same thing: the free public forecast is priced in.
+
+**D-039. Kalshi account eligibility confirmed by the owner (2026-11-16).**
+Kalshi support told the owner that no further emails are needed: eligibility is
+decided by the site's geoblock and by completed identity verification, which the
+owner has done. This removes a practical blocker for any future trading service.
+It is not approval of live trading: rule 1 still requires the owner's written
+approval here, and no strategy has passed a go/no-go gate (P2A and P3A are
+CONDITIONAL). Research and logging use public endpoints and are unaffected.
