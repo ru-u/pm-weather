@@ -1,6 +1,6 @@
 """Copy the logger bucket to ./data/bucket (incremental: skips files already present).
 
-Run with `make pull-data`. Needs PMW_S3_BUCKET, PMW_S3_ENDPOINT,
+Run with `make pull-data` (everything) or `make pull-data PREFIX=raw/ercot`. Needs PMW_S3_BUCKET, PMW_S3_ENDPOINT,
 PMW_S3_ACCESS_KEY_ID and PMW_S3_SECRET_ACCESS_KEY in the environment. These are
 bucket credentials only; this script never touches trading keys.
 """
@@ -21,7 +21,8 @@ def main() -> int:
     remote = Storage.from_env()
     dest = Path(os.environ.get("PMW_PULL_DIR", "data/bucket"))
     copied = skipped = n_bytes = 0
-    for f in remote.list(""):
+    prefix = sys.argv[1] if len(sys.argv) > 1 else ""
+    for f in remote.list(prefix):
         target = dest / f.path
         if target.exists() and target.stat().st_size == f.size:
             skipped += 1

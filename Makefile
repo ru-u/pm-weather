@@ -62,7 +62,7 @@ climo:  ## Pull 35 years of daily snowfall per station for climatology
 	uv run pmw climo-pull
 
 pull-data:  ## Copy the Railway bucket to ./data/bucket (needs PMW_S3_* in .env)
-	uv run --env-file .env python scripts/pull_data.py
+	uv run --env-file .env python scripts/pull_data.py $(PREFIX)
 
 docker-build:  ## Build the lean logger image locally
 	docker build -t pmw-logger .

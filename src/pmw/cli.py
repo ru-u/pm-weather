@@ -274,6 +274,62 @@ def ercot_backfill(
     client.close()
 
 
+@app.command("ercot-build")
+def ercot_build(
+    root: str = typer.Option("data/bucket", help="Local copy of the bucket (make pull-data)"),
+    out: str = typer.Option("data/interim/ercot", help="Output directory"),
+    forecasts: bool = typer.Option(True, help="Also build forecast tables"),
+) -> None:
+    """Build ERCOT actual-load and forecast tables from the pulled raw archive (laptop)."""
+    from pathlib import Path
+
+    from pmw.energy.build import build_actuals, build_forecasts
+
+    _setup_logging()
+    typer.echo(json.dumps({"actuals": build_actuals(Path(root), Path(out))}, indent=1))
+    if forecasts:
+        typer.echo(json.dumps({"forecasts": build_forecasts(Path(root), Path(out))}, indent=1))
+
+
+@app.command("ercot-settle-check")
+def ercot_settle_check(
+    peaks: str = typer.Option("data/interim/ercot/daily_peak.parquet"),
+    brief: bool = typer.Option(True, help="Only print mismatches and the summary."),
+) -> None:
+    """Replicate every settled KXTXERCOTPEAKD market from first-complete NP6-346-CD peaks."""
+    import pyarrow.parquet as pq
+
+    from pmw.markets.kalshi import KalshiPublic
+    from pmw.settle import ercot as se
+    from pmw.utils.config import load_logger_config
+
+    _setup_logging()
+    table = pq.read_table(peaks).to_pylist()
+    by_day = {
+        r["oper_day"]: Decimal(r["peak_first_complete_str"])
+        for r in table
+        if r["peak_first_complete_str"] is not None
+    }
+    client = KalshiPublic(load_logger_config().kalshi.base_url, min_request_interval_s=0.5)
+    checks = se.check_markets(client.settled_markets("KXTXERCOTPEAKD"), by_day)
+    client.close()
+    day = None
+    for c in checks:
+        if not brief and c.oper_day != day:
+            day = c.oper_day
+            typer.echo(f"{day}: ours {c.our_peak}  kalshi {c.kalshi_value}")
+        if not brief or not c.match or c.value_agrees is False:
+            typer.echo(
+                f"  {c.ticker:<34} > {c.floor}  kalshi={c.kalshi_result} "
+                f"ours={c.computed}  value {c.our_peak} vs {c.kalshi_value}"
+                f"  {'ok' if c.match else 'MISMATCH'}"
+            )
+    s = se.summarize(checks)
+    typer.echo(json.dumps(s))
+    if s["reproduced"] != s["markets"] or s["days_value_differs"]:
+        raise typer.Exit(1)
+
+
 @app.command("nbm-pull")
 def nbm_pull(
     start: str = typer.Argument(..., help="First UTC date, YYYY-MM-DD"),

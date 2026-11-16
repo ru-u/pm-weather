@@ -401,3 +401,24 @@ def test_real_np3_565_forecast():
     days = sorted({d for d, m in peaks if m == "X"})
     assert days[0] == date(2026, 11, 15) and len(days) == 8
     assert all(D(30000) < v < D(90000) for v in peaks.values())
+
+
+def test_backfill_then_build_picks_first_complete_version(tmp_path, no_sleep):
+    import pyarrow.parquet as pq
+
+    from pmw.energy import jobs
+    from pmw.energy.build import build_actuals
+    from pmw.utils.storage import Storage
+
+    storage = Storage.local(tmp_path)
+    jobs.backfill(
+        make_client(FakeErcot()), storage, "np6-346-cd", date(2026, 11, 1), date(2026, 11, 30)
+    )
+    # Make the earlier-posted document (101) incomplete: 102 must then be chosen.
+    partial = day_csv("11/14/2026", hours=[f"{h:02d}:00" for h in range(1, 24)])
+    storage.write_bytes("raw/ercot/np6-346-cd/2026/11/101.zip", doc_zip("101.csv", partial))
+    stats = build_actuals(tmp_path, tmp_path / "out")
+    assert stats["operating_days"] == 1 and stats["days_first_posted_incomplete"] == 1
+    (row,) = pq.read_table(tmp_path / "out" / "daily_peak.parquet").to_pylist()
+    assert row["first_complete_doc"] == 102 and row["peak_first_complete_str"] == "51346.64"
+    assert pq.read_table(tmp_path / "out" / "hourly_load.parquet").num_rows == 24
