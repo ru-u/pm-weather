@@ -127,17 +127,23 @@ def asos_frame(texts: dict[str, list[str]], station_map: dict[str, str]) -> pd.D
     for iem, icao in station_map.items():
         for text in texts.get(iem, []):
             for o in parse_asos_csv(text):
-                rows.append((icao, o.valid, o.available_at, o.tmpf))
+                if o.station == iem:  # a multi-station fetch holds every station's rows
+                    rows.append((icao, o.valid, o.available_at, o.tmpf))
     df = pd.DataFrame(rows, columns=["station", "valid", "available_at", "tmpf"])
     return df.drop_duplicates(["station", "valid"]).sort_values(["station", "valid"])
 
 
-def zone_weights(hourly: pd.DataFrame) -> pd.DataFrame:
+def zone_weights(hourly: pd.DataFrame, through: date | None = None) -> pd.DataFrame:
     """Per operating day: each zone's share of settled load over the 90 days ending
-    two days before it. Index oper_day (date), columns ZONES."""
+    two days before it. Index oper_day (date), columns ZONES.
+
+    `through` extends the index to a day whose own load has not settled yet (a live
+    run): its weights use only days up to two days before it, as always."""
     daily = hourly.groupby("oper_day")[list(ZONES)].sum().sort_index()
     daily.index = pd.to_datetime(daily.index)
     daily = daily.asfreq("D")
+    if through is not None and len(daily) and pd.Timestamp(through) > daily.index[-1]:
+        daily = daily.reindex(pd.date_range(daily.index[0], pd.Timestamp(through), freq="D"))
     roll = daily.rolling(WEIGHT_WINDOW_DAYS, min_periods=14).sum().shift(WEIGHT_GAP_DAYS)
     w = roll.div(roll.sum(axis=1), axis=0)
     w.index = w.index.date

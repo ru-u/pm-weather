@@ -107,8 +107,17 @@ def pull_year(
     return path
 
 
-def fetch_text(client: httpx.Client, station: str, start: date, end_exclusive: date) -> str:
-    """Raw IEM CSV for a short span (a live job fetches today and yesterday)."""
-    resp = client.get(ASOS_URL, params=asos_params(station, start, end_exclusive))
-    resp.raise_for_status()
-    return resp.text
+def fetch_text(
+    client: httpx.Client, stations: list[str], start: date, end_exclusive: date, tries: int = 4
+) -> str:
+    """Raw IEM CSV for several stations over a short span, in one request (IEM
+    rate-limits bursts of requests). A live job fetches yesterday to tomorrow."""
+    params = [p for p in asos_params(stations[0], start, end_exclusive) if p[0] != "station"]
+    params = [("station", s) for s in stations] + params
+    for attempt in range(tries):
+        resp = client.get(ASOS_URL, params=params)
+        if resp.status_code != 429 or attempt == tries - 1:
+            resp.raise_for_status()
+            return resp.text
+        time.sleep(5.0 * 2**attempt)
+    raise RuntimeError("unreachable")

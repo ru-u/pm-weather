@@ -137,3 +137,38 @@ def test_asos_frame_from_raw_texts():
     assert set(df["station"]) == {"KMAF"} and df["valid"].is_monotonic_increasing
     assert (df["available_at"] - df["valid"] == timedelta(minutes=15)).all()
     assert len(df) == len(asos_frame({"MAF": [text]}, {"MAF": "KMAF"}))  # duplicates dropped
+
+
+def test_zone_weights_through_an_unsettled_day_use_only_earlier_days():
+    days = pd.date_range("2026-08-01", "2026-11-16", freq="D").date
+    hourly = pd.DataFrame([{"oper_day": d, "north": 3.0, "south": 2.0, "west": 1.0,
+                            "houston": 4.0} for d in days])  # fmt: skip
+    w = zone_weights(hourly)
+    assert w.index[-1] == date(2026, 11, 16)
+    live = zone_weights(hourly, through=date(2026, 11, 17))
+    assert live.index[-1] == date(2026, 11, 17)
+    assert live.loc[date(2026, 11, 17), "north"] == pytest.approx(0.3)
+    pd.testing.assert_frame_equal(live.iloc[:-1], w)
+
+
+def test_asos_fetch_is_one_request_for_all_stations_and_retries_rate_limits(monkeypatch):
+    import httpx
+
+    from pmw.features.ercot_weather import asos_frame
+    from pmw.weather import asos
+
+    calls = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        calls.append(req.url.params.get_list("station"))
+        if len(calls) == 1:
+            return httpx.Response(429)
+        return httpx.Response(200, text="station,valid,tmpf\nMAF,2026-11-17 18:53,70.00\n"
+                                        "DFW,2026-11-17 18:53,61.00\n")  # fmt: skip
+
+    monkeypatch.setattr(asos.time, "sleep", lambda s: None)
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    text = asos.fetch_text(client, ["MAF", "DFW"], date(2026, 11, 16), date(2026, 11, 19))
+    assert calls == [["MAF", "DFW"], ["MAF", "DFW"]]
+    df = asos_frame({"MAF": [text], "DFW": [text]}, {"MAF": "KMAF", "DFW": "KDFW"})
+    assert dict(zip(df["station"], df["tmpf"], strict=True)) == {"KDFW": 61.0, "KMAF": 70.0}
