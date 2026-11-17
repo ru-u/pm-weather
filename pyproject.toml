@@ -1,6 +1,6 @@
 [project]
 name = "pmw"
-version = "0.1.0"
+version = "0.2.0"
 description = "Research-grade study of tradable edge in niche weather and energy prediction markets (Kalshi snowfall, ERCOT peak demand)."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
