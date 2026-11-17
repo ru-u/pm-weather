@@ -196,3 +196,12 @@ def test_nothing_usable_returns_counts_not_a_crash():
     assert r["verdict"] is None
     assert r["quote_counts"]["with_book"] == len(f)
     assert r["quote_counts"]["two_sided"] == 0
+
+
+def test_book_taker_without_volume_cap_is_limited_by_book_and_caps_only():
+    deep = {"no_px": [0.40], "no_qty": [400.0], "yes_px": [0.20], "yes_qty": [100.0]}
+    obs = _obs([{"ticker": "A", "event_ticker": "E", "t": "2027-01-09T14:30Z", "p_nbm": 0.9,
+                 "volume": 0.0, **deep}])  # fmt: skip
+    assert p2as.simulate_taker_books(obs, tau=0.10).empty
+    tr = p2as.simulate_taker_books(obs, tau=0.10, volume_share=False)
+    assert tr["contracts"].tolist() == [250.0]

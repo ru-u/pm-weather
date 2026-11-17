@@ -16,6 +16,7 @@ here, and this file's commit must predate the experiment's evaluation date.
 | P4-paper | 2026-11-17 04:45 | on or after 2027-10-15 | `ad023f9f9a5253cc0a5973a1939068f264fb5641db22f420b1cea0e44e69050f` |
 | P4S-T | 2026-11-17 14:25 | 2026-11-17 (run once) | `e81c0225541654cba5dc55957138b7a0a9c67c28ba222b59e18388de7ea4b0e1` |
 | P4S-paper | 2026-11-17 14:25, amended same day | on or after 2027-05-15 | `df42ae563b20bd7c22df3c4eeb66b10df85b87a7fd00c387ed6a556711c31f90` |
+| P4-paper implementation clarifications | 2026-11-17, before the first sample day | with P4-paper | `3c454c2f8f6c819c2e5c0e4bd9e3dfdf3cf78a990a7db0163386cf4dc0acb9f8` |
 
 ## Decision entries (full text of `docs/decisions.md` entries)
 

@@ -204,7 +204,9 @@ def quotes_from_books(
 # ---------- 3. taker on the book ----------
 
 
-def simulate_taker_books(obs: pd.DataFrame, tau: float, prob_col: str = "p_nbm") -> pd.DataFrame:
+def simulate_taker_books(
+    obs: pd.DataFrame, tau: float, prob_col: str = "p_nbm", volume_share: bool = True
+) -> pd.DataFrame:
     """P2A's naive taker (clarification 10) with fills from the logged book.
 
     Size cap: floor(min(10% of the hour's volume, 250)) per market per UTC day and
@@ -212,7 +214,8 @@ def simulate_taker_books(obs: pd.DataFrame, tau: float, prob_col: str = "p_nbm")
     perceived edge at the best level goes first. The book is walked level by level
     while the after-fee edge stays above tau. Output columns match P2A's
     `simulate_taker` (price and fee are per-contract averages), so
-    `p2a_score.taker_summary` applies.
+    `p2a_score.taker_summary` applies. With volume_share=False the cap is 250
+    per market regardless of traded volume (the displayed book is the only limit).
     """
     trades = []
     held: set[tuple[str, Any]] = set()
@@ -223,7 +226,8 @@ def simulate_taker_books(obs: pd.DataFrame, tau: float, prob_col: str = "p_nbm")
             day = r.t.date()
             if (r.ticker, day) in held:
                 continue
-            size = math.floor(min(VOLUME_SHARE * r.volume, MARKET_DAY_CAP))
+            vol_cap = VOLUME_SHARE * r.volume if volume_share else math.inf
+            size = math.floor(min(vol_cap, MARKET_DAY_CAP))
             if size < 1:
                 continue
             p = float(getattr(r, prob_col))
