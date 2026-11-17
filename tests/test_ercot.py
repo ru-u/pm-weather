@@ -424,6 +424,26 @@ def test_backfill_then_build_picks_first_complete_version(tmp_path, no_sleep):
     assert pq.read_table(tmp_path / "out" / "hourly_load.parquet").num_rows == 24
 
 
+def test_manifest_since_keeps_only_recent_documents(tmp_path, no_sleep):
+    from datetime import datetime
+
+    from pmw.energy import jobs
+    from pmw.energy.build import manifest_docs
+    from pmw.utils.storage import Storage
+
+    storage = Storage.local(tmp_path)
+    jobs.backfill(
+        make_client(FakeErcot()), storage, "np6-346-cd", date(2026, 11, 1), date(2026, 11, 30)
+    )
+    docs = manifest_docs(tmp_path, "np6-346-cd")
+    assert [d.doc_id for d in docs] == [101, 102]
+    cut = docs[1].post_utc
+    assert [d.doc_id for d in manifest_docs(tmp_path, "np6-346-cd", since=cut)] == [102]
+    assert (
+        manifest_docs(tmp_path, "np6-346-cd", since=datetime(2030, 1, 1, tzinfo=cut.tzinfo)) == []
+    )
+
+
 def test_kalshi_display_precision_is_not_a_disagreement():
     # Real cases from settled markets (ours from NP6-346-CD, Kalshi's recorded text).
     agree = settle_ercot.values_agree

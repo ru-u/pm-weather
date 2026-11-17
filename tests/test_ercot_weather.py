@@ -104,3 +104,36 @@ def test_missing_zone_gives_empty_weighted_value():
     rows = pd.DataFrame({"oper_day": [D], "hour": [14], "t": [pd.Timestamp(t)]})
     f = weather_features(rows, nbh, _asos([]), _weights(), ZONE_OF).iloc[0]
     assert np.isnan(f["wx_fc_max_rem"])
+
+
+def test_live_nbh_snapshots_parse_like_the_archive(tmp_path):
+    import gzip
+    import json
+    from pathlib import Path
+
+    from pmw.features.ercot_weather import load_live_nbh, nbh_frame
+
+    text = (Path(__file__).parent / "fixtures" / "nbh_KIAH_2026110504.txt").read_text()
+    rec = {"product": "nbh", "station": "KIAH", "cycle": "2026-11-05T04:00:00+00:00",
+           "last_modified": "2026-11-05T05:02:00+00:00", "text": text}  # fmt: skip
+    day = tmp_path / "20261105"
+    day.mkdir()
+    with gzip.open(day / "04.jsonl.gz", "wt") as f:
+        f.write(json.dumps(rec) + "\n" + json.dumps({**rec, "station": "KXXX"}) + "\n")
+    live = load_live_nbh(tmp_path, [date(2026, 11, 5)], ["KIAH"])
+    assert len(live) > 20 and set(live["station"]) == {"KIAH"}
+    assert live["cycle"].iloc[0] == datetime(2026, 11, 5, 4, tzinfo=UTC)
+    pd.testing.assert_frame_equal(live, nbh_frame([rec], ["KIAH"]))
+    assert load_live_nbh(tmp_path, [date(2026, 11, 6)], ["KIAH"]).empty
+
+
+def test_asos_frame_from_raw_texts():
+    from pathlib import Path
+
+    from pmw.features.ercot_weather import asos_frame
+
+    text = (Path(__file__).parent / "fixtures" / "iem_asos_MAF_2021-02-15.csv").read_text()
+    df = asos_frame({"MAF": [text, text]}, {"MAF": "KMAF"})
+    assert set(df["station"]) == {"KMAF"} and df["valid"].is_monotonic_increasing
+    assert (df["available_at"] - df["valid"] == timedelta(minutes=15)).all()
+    assert len(df) == len(asos_frame({"MAF": [text]}, {"MAF": "KMAF"}))  # duplicates dropped

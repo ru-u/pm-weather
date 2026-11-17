@@ -127,8 +127,12 @@ def intraday_features(
     }  # fmt: skip
 
 
-def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
-    """One row per (operating day, decision hour) with features and target."""
+def build_dataset(t: Tables, start: date, end: date, targets: bool = True) -> pd.DataFrame:
+    """One row per (operating day, decision hour) with features and target.
+
+    With targets=False, days without settled load are kept and R, A and y are NaN:
+    the rows a live trader can build before the day settles. Features are the same.
+    """
     settled = {
         d: g.sort_values(["hour_ending", "repeated"]) for d, g in t.hourly.groupby("oper_day")
     }
@@ -156,10 +160,10 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
     rows = []
     d = start
     while d <= end:
-        if d not in settled or d not in inuse_by_day:
+        if (targets and d not in settled) or d not in inuse_by_day:
             d += timedelta(days=1)
             continue
-        hours = settled[d]
+        hours = settled.get(d)
         for h in DECISION_HOURS:
             tdec = decision_time(d, h)
             posts = inuse_by_day[d][inuse_by_day[d]["post_utc"] < tdec]
@@ -176,13 +180,17 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
             if fc is None:
                 continue
             rem_fc = fc[fc["hour_ending"] > h]
-            rem_set = hours[hours["hour_ending"] > h]
-            if rem_fc.empty or rem_set.empty or rem_fc["system_total"].isna().any():
+            if rem_fc.empty or rem_fc["system_total"].isna().any():
                 continue
+            if targets:
+                assert hours is not None
+                rem_set = hours[hours["hour_ending"] > h]
+                if rem_set.empty:
+                    continue
             F = float(post["peak"])
             F_rem = float(rem_fc["system_total"].max())
-            R = float(rem_set["total"].max())
-            A = float(hours["total"].max())
+            R = float(rem_set["total"].max()) if targets else math.nan
+            A = float(hours["total"].max()) if targets and hours is not None else math.nan
             # Intraday, from telemetry of completed hours (live dashboard stand-in).
             intra = intraday_features(tel_h.get(d), tel5, fc, h, tdec, F_rem)
             # Forecast shape and model spread.
@@ -203,7 +211,8 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
             rows.append(
                 {
                     "oper_day": d, "hour": h, "t": pd.Timestamp(tdec), "post_utc": post["post_utc"],
-                    "F": F, "F_rem": F_rem, "R": R, "A": A, "y": math.log(R / F_rem),
+                    "F": F, "F_rem": F_rem, "R": R, "A": A,
+                    "y": math.log(R / F_rem) if targets else math.nan,
                     **intra,
                     "Frem_over_F": F_rem / F, "hours_left": 24 - h, "peak_he": peak_he,
                     "hours_to_fc_peak": peak_he - h,

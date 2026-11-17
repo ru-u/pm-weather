@@ -70,32 +70,63 @@ def nbh_cycle_hours_for_day(day: date) -> list[int]:
 
 def load_nbh(root: Path, days: Iterable[date], stations: list[str]) -> pd.DataFrame:
     """Long table: station, cycle, available_at, valid, tmp, tsd (deg F)."""
-    from pmw.weather.nbm_text import available_at, parse_nbh_block, read_day
+    from pmw.weather.nbm_text import read_day
+
+    return nbh_frame((rec for d in days for rec in read_day(root, "nbh", d)), stations)
+
+
+def load_live_nbh(root: Path, days: Iterable[date], stations: list[str]) -> pd.DataFrame:
+    """The same table from `ercot-live` snapshots: <root>/YYYYMMDD/HH.jsonl.gz per cycle."""
+    import gzip
+    import json
+
+    def records() -> Iterable[dict[str, object]]:
+        for d in days:
+            for f in sorted((root / f"{d:%Y%m%d}").glob("*.jsonl.gz")):
+                with gzip.open(f, "rt", encoding="utf-8") as fh:
+                    for line in fh:
+                        if line.strip():
+                            yield json.loads(line)
+
+    return nbh_frame(records(), stations)
+
+
+def nbh_frame(records: Iterable[dict[str, object]], stations: list[str]) -> pd.DataFrame:
+    from pmw.weather.nbm_text import available_at, parse_nbh_block
 
     rows = []
     want = set(stations)
-    for d in days:
-        for rec in read_day(root, "nbh", d):
-            if rec["station"] not in want or not rec["text"]:
-                continue
-            b = parse_nbh_block(str(rec["text"]))
-            lm = rec["last_modified"]
-            avail = available_at(b.issue, datetime.fromisoformat(str(lm)) if lm else None)
-            tsd = b.values.get("TSD", {})
-            for v, tmp in b.values.get("TMP", {}).items():
-                rows.append((b.station, b.issue, avail, v, tmp, tsd.get(v)))
+    for rec in records:
+        if rec["station"] not in want or not rec["text"]:
+            continue
+        b = parse_nbh_block(str(rec["text"]))
+        lm = rec["last_modified"]
+        avail = available_at(b.issue, datetime.fromisoformat(str(lm)) if lm else None)
+        tsd = b.values.get("TSD", {})
+        for v, tmp in b.values.get("TMP", {}).items():
+            rows.append((b.station, b.issue, avail, v, tmp, tsd.get(v)))
     df = pd.DataFrame(rows, columns=["station", "cycle", "available_at", "valid", "tmp", "tsd"])
     return df.drop_duplicates(["station", "cycle", "valid"])
 
 
 def load_asos(root: Path, station_map: dict[str, str]) -> pd.DataFrame:
     """station (ICAO), valid, available_at, tmpf. `station_map`: IEM id -> ICAO."""
+
+    texts = {
+        iem: [f.read_text() for f in sorted((root / iem).glob(f"{iem}_*.csv"))]
+        for iem in station_map
+    }
+    return asos_frame(texts, station_map)
+
+
+def asos_frame(texts: dict[str, list[str]], station_map: dict[str, str]) -> pd.DataFrame:
+    """The `load_asos` table from raw IEM CSV texts per IEM id (archive or live fetch)."""
     from pmw.weather.asos import parse_asos_csv
 
     rows = []
     for iem, icao in station_map.items():
-        for f in sorted((root / iem).glob(f"{iem}_*.csv")):
-            for o in parse_asos_csv(f.read_text()):
+        for text in texts.get(iem, []):
+            for o in parse_asos_csv(text):
                 rows.append((icao, o.valid, o.available_at, o.tmpf))
     df = pd.DataFrame(rows, columns=["station", "valid", "available_at", "tmpf"])
     return df.drop_duplicates(["station", "valid"]).sort_values(["station", "valid"])

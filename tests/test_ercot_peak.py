@@ -160,3 +160,16 @@ def test_live_intraday_uses_only_points_seen_before_the_decision():
     # Nothing seen: no load so far.
     none = ep.with_live_intraday(rows, t, _points(t, 0.0).iloc[:0])
     assert none["H_tel"].isna().all() and none["cur_over_Frem"].isna().all()
+
+
+def test_dataset_without_targets_keeps_unsettled_days_with_the_same_features():
+    days = [date(2024, 7, 1) + timedelta(days=i) for i in range(5)]
+    t = _tables(days)
+    full = ep.build_dataset(t, days[0], days[-1])
+    t.hourly = t.hourly[t.hourly["oper_day"] != days[-1]]  # the last day has not settled
+    assert (ep.build_dataset(t, days[0], days[-1])["oper_day"] != days[-1]).all()
+    live = ep.build_dataset(t, days[0], days[-1], targets=False)
+    assert len(live) == len(full)
+    assert live[["R", "A", "y"]].isna().all().all()
+    feats = [c for c in full.columns if c not in ("R", "A", "y")]
+    pd.testing.assert_frame_equal(live[feats], full[feats])

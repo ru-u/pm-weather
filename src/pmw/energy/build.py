@@ -63,11 +63,17 @@ class Doc:
     path: Path
 
 
-def manifest_docs(root: Path, emil: str) -> list[Doc]:
-    """Documents listed in the month manifests that exist locally, in post order."""
+def manifest_docs(root: Path, emil: str, since: datetime | None = None) -> list[Doc]:
+    """Documents listed in the month manifests that exist locally, in post order.
+
+    With `since`, only documents posted at or after it (a live job builds recent
+    tables from recent documents; missing older files are then not warned about).
+    """
     docs = []
     for mf in sorted((root / "raw/ercot" / emil / "manifest").glob("*.parquet")):
         for r in pq.read_table(mf).to_pylist():
+            if since is not None and r["post_datetime_utc"] < since:
+                continue
             path = root / r["path"]
             if path.exists():
                 docs.append(Doc(r["doc_id"], r["post_datetime_utc"], path))
@@ -80,8 +86,8 @@ def _f(x: Decimal | None) -> float | None:
     return None if x is None else float(x)
 
 
-def build_actuals(root: Path, out: Path) -> dict[str, Any]:
-    docs = manifest_docs(root, ACTUAL_LOAD_BY_FORECAST_ZONE)
+def build_actuals(root: Path, out: Path, since: datetime | None = None) -> dict[str, Any]:
+    docs = manifest_docs(root, ACTUAL_LOAD_BY_FORECAST_ZONE, since)
     versions: list[dict[str, Any]] = []
     rows_by_doc: dict[int, list[LoadHour]] = {}
     by_day: dict[date, list[Doc]] = defaultdict(list)
@@ -166,8 +172,8 @@ def build_actuals(root: Path, out: Path) -> dict[str, Any]:
     }
 
 
-def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
-    docs = manifest_docs(root, LOAD_FORECAST_BY_WEATHER_ZONE)
+def build_forecasts(root: Path, out: Path, since: datetime | None = None) -> dict[str, Any]:
+    docs = manifest_docs(root, LOAD_FORECAST_BY_WEATHER_ZONE, since)
     peaks_rows, hourly_rows = [], []
     bad = 0
     headers: defaultdict[str, int] = defaultdict(int)
@@ -232,14 +238,14 @@ def build_forecasts(root: Path, out: Path) -> dict[str, Any]:
     }
 
 
-def build_telemetry(root: Path, out: Path) -> dict[str, Any]:
+def build_telemetry(root: Path, out: Path, since: datetime | None = None) -> dict[str, Any]:
     """5-minute real-time load (NP3-910-ER) and its hourly averages.
 
     In history this stands in for what ERCOT's public dashboard showed live. The
     hourly averages are compared with the settled NP6-346-CD hourly TOTAL on the
     overlap, so the model's "load so far" error is known.
     """
-    docs = manifest_docs(root, REAL_TIME_LOAD)
+    docs = manifest_docs(root, REAL_TIME_LOAD, since)
     seen: set[tuple[datetime, bool]] = set()
     points: list[dict[str, Any]] = []
     bad = 0

@@ -105,3 +105,10 @@ def pull_year(
     tmp.write_text(resp.text)
     tmp.rename(path)
     return path
+
+
+def fetch_text(client: httpx.Client, station: str, start: date, end_exclusive: date) -> str:
+    """Raw IEM CSV for a short span (a live job fetches today and yesterday)."""
+    resp = client.get(ASOS_URL, params=asos_params(station, start, end_exclusive))
+    resp.raise_for_status()
+    return resp.text
