@@ -1,0 +1,415 @@
+
+676 
+CDUS41 KOKX 262150
+CLINYC
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE NEW YORK, NY
+450 PM EST MON JAN 26 2026
+
+...................................
+
+...THE CENTRAL PARK NY CLIMATE SUMMARY FOR JANUARY 26 2026...
+VALID TODAY AS OF 0400 PM LOCAL TIME.
+
+CLIMATE NORMAL PERIOD 1991 TO 2020
+CLIMATE RECORD PERIOD 1869 TO 2026
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ TODAY                                                               
+  MAXIMUM         27    316 PM  72    1950  39    -12       43       
+  MINIMUM         18    632 AM   2    1871  27     -9       31       
+  AVERAGE         23                        33    -10       37     
+
+PRECIPITATION (IN)                                                    
+  TODAY            0.02          2.19 1986   0.11  -0.09     0.00     
+  MONTH TO DATE    2.70                      3.07  -0.37     0.45     
+  SINCE DEC 1      6.08                      7.45  -1.37     4.98     
+  SINCE JAN 1      2.70                      3.07  -0.37     0.45     
+
+SNOWFALL (IN)                                                              
+  TODAY            T            12.3  2011   0.3   -0.3      0.0      
+  MONTH TO DATE   13.9                       7.0    6.9      3.0      
+  SINCE DEC 1     21.1                      11.9    9.2      5.8      
+  SINCE JUL 1     21.1                      12.5    8.6      5.8      
+  SNOW DEPTH       9                                                 
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  TODAY           42                        32     10       28        
+  MONTH TO DATE  826                       815     11      904        
+  SINCE DEC 1   1786                      1619    167     1728        
+  SINCE JUL 1   2537                      2403    134     2292        
+
+ COOLING                                                              
+  TODAY            0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE DEC 1      0                         0      0        0        
+  SINCE JAN 1      0                         0      0        0        
+...................................................................
+
+
+WIND (MPH)                                                            
+  HIGHEST WIND SPEED    15   HIGHEST WIND DIRECTION    NW (300)       
+  HIGHEST GUST SPEED    27   HIGHEST GUST DIRECTION    NW (310)       
+  AVERAGE WIND SPEED     5.0                                        
+
+
+SKY COVER                                                             
+  AVERAGE SKY COVER 1.0                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED TODAY.                             
+  LIGHT SNOW                                                          
+  FOG                                                                 
+  HAZE                                                                
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    92          1200 AM                                      
+ LOWEST     55           400 PM                                      
+ AVERAGE    74                                                        
+
+..........................................................
+
+
+THE CENTRAL PARK NY CLIMATE NORMALS FOR TOMORROW
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   39        69      1916                      
+ MINIMUM TEMPERATURE (F)   27        -1      1927                      
+
+
+SUNRISE AND SUNSET                                                    
+JANUARY 26 2026.......SUNRISE   711 AM EST   SUNSET   506 PM EST     
+JANUARY 27 2026.......SUNRISE   710 AM EST   SUNSET   507 PM EST     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+
+
+823 
+CDUS41 KOKX 260646
+CLINYC
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE NEW YORK, NY
+146 AM EST MON JAN 26 2026
+
+...................................
+
+...THE CENTRAL PARK NY CLIMATE SUMMARY FOR JANUARY 25 2026...
+
+CLIMATE NORMAL PERIOD 1991 TO 2020
+CLIMATE RECORD PERIOD 1869 TO 2026
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ YESTERDAY                                                           
+  MAXIMUM         22   1136 PM  60    1967  39    -17       33       
+  MINIMUM         10    807 AM   2    1945  27    -17       20       
+  AVERAGE         16                        33    -17       27     
+
+PRECIPITATION (IN)                                                    
+  YESTERDAY        1.80R         1.80 1978   0.11   1.69     0.00     
+                                      2026                           
+  MONTH TO DATE    2.68                      2.96  -0.28     0.45     
+  SINCE DEC 1      6.06                      7.34  -1.28     4.98     
+  SINCE JAN 1      2.68                      2.96  -0.28     0.45     
+
+SNOWFALL (IN)                                                              
+  YESTERDAY       11.4 R        11.4  2026   0.4   11.0      0.0      
+  MONTH TO DATE   13.9                       6.7    7.2      3.0      
+  SINCE DEC 1     21.1                      11.6    9.5      5.8      
+  SINCE JUL 1     21.1                      12.2    8.9      5.8      
+  SNOW DEPTH       1                                                 
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  YESTERDAY       49                        32     17       38        
+  MONTH TO DATE  784                       783      1      876        
+  SINCE DEC 1   1744                      1587    157     1700        
+  SINCE JUL 1   2495                      2371    124     2264        
+
+ COOLING                                                              
+  YESTERDAY        0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE DEC 1      0                         0      0        0        
+  SINCE JAN 1      0                         0      0        0        
+...................................................................
+
+
+WIND (MPH)                                                            
+  HIGHEST WIND SPEED    21   HIGHEST WIND DIRECTION     E (70)        
+  HIGHEST GUST SPEED    31   HIGHEST GUST DIRECTION    NE (60)        
+  AVERAGE WIND SPEED     9.9                                        
+
+
+SKY COVER                                                             
+  AVERAGE SKY COVER 0.9                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED YESTERDAY.                         
+  LT FREEZING RAIN                                                    
+  SNOW                                                                
+  LIGHT SNOW                                                          
+  FOG                                                                 
+  FOG W/VISIBILITY <= 1/4 MILE                                        
+  HAZE                                                                
+  BLOWING SNOW                                                        
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    88          1100 PM                                      
+ LOWEST     27           100 AM                                      
+ AVERAGE    58                                                        
+
+..........................................................
+
+
+THE CENTRAL PARK NY CLIMATE NORMALS FOR TODAY
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   39        72      1950                      
+ MINIMUM TEMPERATURE (F)   27         2      1871                      
+
+
+SUNRISE AND SUNSET                                                    
+JANUARY 26 2026.......SUNRISE   711 AM EST   SUNSET   506 PM EST     
+JANUARY 27 2026.......SUNRISE   710 AM EST   SUNSET   507 PM EST     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+
+
+643 
+CDUS41 KOKX 252137
+CLINYC
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE NEW YORK, NY
+437 PM EST SUN JAN 25 2026
+
+...................................
+
+...THE CENTRAL PARK NY CLIMATE SUMMARY FOR JANUARY 25 2026...
+VALID TODAY AS OF 0400 PM LOCAL TIME.
+
+CLIMATE NORMAL PERIOD 1991 TO 2020
+CLIMATE RECORD PERIOD 1869 TO 2026
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ TODAY                                                               
+  MAXIMUM         15    359 PM  60    1967  39    -24       33       
+  MINIMUM         10    807 AM   2    1945  27    -17       20       
+  AVERAGE         13                        33    -20       27     
+
+PRECIPITATION (IN)                                                    
+  TODAY            1.35          1.80 1978   0.11   1.24     0.00     
+  MONTH TO DATE    2.23                      2.96  -0.73     0.45     
+  SINCE DEC 1      5.61                      7.34  -1.73     4.98     
+  SINCE JAN 1      2.23                      2.96  -0.73     0.45     
+
+SNOWFALL (IN)                                                              
+  TODAY            8.8          10.0  1905   0.4    8.4      0.0      
+  MONTH TO DATE   11.3                       6.7    4.6      3.0      
+  SINCE DEC 1     18.5                      11.6    6.9      5.8      
+  SINCE JUL 1     18.5                      12.2    6.3      5.8      
+  SNOW DEPTH       1                                                 
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  TODAY           52                        32     20       38        
+  MONTH TO DATE  787                       783      4      876        
+  SINCE DEC 1   1747                      1587    160     1700        
+  SINCE JUL 1   2498                      2371    127     2264        
+
+ COOLING                                                              
+  TODAY            0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE DEC 1      0                         0      0        0        
+  SINCE JAN 1      0                         0      0        0        
+...................................................................
+
+
+WIND (MPH)                                                            
+  HIGHEST WIND SPEED    17   HIGHEST WIND DIRECTION    NE (50)        
+  HIGHEST GUST SPEED    26   HIGHEST GUST DIRECTION    NE (60)        
+  AVERAGE WIND SPEED     9.3                                        
+
+
+SKY COVER                                                             
+  AVERAGE SKY COVER 0.9                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED TODAY.                             
+  SNOW                                                                
+  LIGHT SNOW                                                          
+  FOG                                                                 
+  FOG W/VISIBILITY <= 1/4 MILE                                        
+  BLOWING SNOW                                                        
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    84           200 PM                                      
+ LOWEST     27           100 AM                                      
+ AVERAGE    56                                                        
+
+..........................................................
+
+
+THE CENTRAL PARK NY CLIMATE NORMALS FOR TOMORROW
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   39        72      1950                      
+ MINIMUM TEMPERATURE (F)   27         2      1871                      
+
+
+SUNRISE AND SUNSET                                                    
+JANUARY 25 2026.......SUNRISE   712 AM EST   SUNSET   505 PM EST     
+JANUARY 26 2026.......SUNRISE   711 AM EST   SUNSET   506 PM EST     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+
+
+994 
+CDUS41 KOKX 250616
+CLINYC
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE NEW YORK, NY
+116 AM EST SUN JAN 25 2026
+
+...................................
+
+...THE CENTRAL PARK NY CLIMATE SUMMARY FOR JANUARY 24 2026...
+
+CLIMATE NORMAL PERIOD 1991 TO 2020
+CLIMATE RECORD PERIOD 1869 TO 2026
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ YESTERDAY                                                           
+  MAXIMUM         17    729 PM  68    1967  39    -22       33       
+  MINIMUM          9    915 AM  -6    1882  27    -18       23       
+  AVERAGE         13                        33    -20       28     
+
+PRECIPITATION (IN)                                                    
+  YESTERDAY        0.00          2.18 1979   0.12  -0.12     0.00     
+  MONTH TO DATE    0.88                      2.85  -1.97     0.45     
+  SINCE DEC 1      4.26                      7.23  -2.97     4.98     
+  SINCE JAN 1      0.88                      2.85  -1.97     0.45     
+
+SNOWFALL (IN)                                                              
+  YESTERDAY        0.0           7.0  1908   0.3   -0.3      0.0      
+  MONTH TO DATE    2.5                       6.3   -3.8      3.0      
+  SINCE DEC 1      9.7                      11.2   -1.5      5.8      
+  SINCE JUL 1      9.7                      11.8   -2.1      5.8      
+  SNOW DEPTH       0                                                 
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  YESTERDAY       52                        32     20       37        
+  MONTH TO DATE  735                       751    -16      838        
+  SINCE DEC 1   1695                      1555    140     1662        
+  SINCE JUL 1   2446                      2339    107     2226        
+
+ COOLING                                                              
+  YESTERDAY        0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE DEC 1      0                         0      0        0        
+  SINCE JAN 1      0                         0      0        0        
+...................................................................
+
+
+WIND (MPH)                                                            
+  HIGHEST WIND SPEED    18   HIGHEST WIND DIRECTION    NW (300)       
+  HIGHEST GUST SPEED    31   HIGHEST GUST DIRECTION    NW (300)       
+  AVERAGE WIND SPEED     7.7                                        
+
+
+SKY COVER                                                             
+  AVERAGE SKY COVER 0.0                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED YESTERDAY.                         
+  NO SIGNIFICANT WEATHER WAS OBSERVED.                                  
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    45           700 AM                                      
+ LOWEST     25           400 PM                                      
+ AVERAGE    35                                                        
+
+..........................................................
+
+
+THE CENTRAL PARK NY CLIMATE NORMALS FOR TODAY
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   39        60      1967                      
+ MINIMUM TEMPERATURE (F)   27         2      1945                      
+
+
+SUNRISE AND SUNSET                                                    
+JANUARY 25 2026.......SUNRISE   712 AM EST   SUNSET   505 PM EST     
+JANUARY 26 2026.......SUNRISE   711 AM EST   SUNSET   506 PM EST     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+

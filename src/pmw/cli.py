@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 import typer
 
@@ -272,6 +273,30 @@ def ercot_backfill(
     typer.echo(json.dumps(stats))
     typer.echo(f"requests: {client.request_count}")
     client.close()
+
+
+@app.command("ercot-live")
+def ercot_live() -> None:
+    """[Railway cron] One live snapshot: ERCOT dashboard, NBH, ERCOT archives, Kalshi incentives."""
+    import os
+    from datetime import UTC
+    from datetime import datetime as _dt
+
+    from pmw.energy.ercot import ENV_USERNAME
+    from pmw.energy.live import run_once
+    from pmw.utils.config import load_ercot_stations_config
+    from pmw.utils.storage import Storage
+
+    _setup_logging()
+    client = _ercot_client() if os.environ.get(ENV_USERNAME) else None
+    stations = sorted(load_ercot_stations_config().stations)
+    summary = run_once(Storage.from_env(), _dt.now(UTC), stations, client)
+    if client is not None:
+        summary["ercot_requests"] = client.request_count
+        client.close()
+    typer.echo(json.dumps(summary, default=str))
+    if not summary["ok"]:
+        raise typer.Exit(code=1)
 
 
 @app.command("ercot-build")
@@ -588,16 +613,24 @@ def climo_pull(
 def obs_build(
     climo: str = typer.Option("data/interim/climo/daily_snow.parquet"),
     out: str = typer.Option("data/interim/obs/daily_snow_settlement.parquet"),
+    all_stations: bool = typer.Option(
+        False, help="Every station in configs/stations.yaml (P2B) instead of P2A's 13"
+    ),
+    first_year: int = typer.Option(2021),
+    last_year: int = typer.Option(2026),
 ) -> None:
     """Observed daily snowfall at settlement stations (CLI, ACIS for gaps), winters 2021-2026."""
     from pathlib import Path
 
     from pmw.features.obs_table import build_observed
+    from pmw.utils.config import load_stations_config
 
     _setup_logging()
     stations = ["KNYC", "KBOS", "KDCA", "KPHL", "KORD", "KDTW", "KSEA", "KSLC", "KDFW",
                 "KAUS", "KHOU", "KEWR", "KPVD"]  # fmt: skip
-    stats = build_observed(stations, list(range(2021, 2027)), Path(climo), Path(out))
+    if all_stations:
+        stations = sorted(load_stations_config().stations)
+    stats = build_observed(stations, list(range(first_year, last_year + 1)), Path(climo), Path(out))
     typer.echo(f"wrote {out}: {stats}")
 
 
@@ -618,6 +651,141 @@ def nbs_parse(
     _setup_logging()
     days = date_range(_date.fromisoformat(start), _date.fromisoformat(end))
     typer.echo(f"wrote {out}: {build_nbs_table(Path(raw), days, Path(out))}")
+
+
+@app.command("p2b")
+def p2b_cmd(
+    out_dir: str = typer.Option("data/processed/p2b"),
+) -> None:
+    """Experiment P2B: calibration of NBM snowfall probabilities against CLI (no prices)."""
+    from pathlib import Path
+
+    from pmw.eval import p2b
+    from pmw.utils.config import load_stations_config
+
+    _setup_logging()
+    stations = {k: v.std_utc_offset_hours for k, v in load_stations_config().stations.items()}
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    cases = p2b.run(stations, (*p2b.DEV_SEASONS, p2b.TEST_SEASON))
+    cases.to_parquet(out / "cases.parquet")
+    leak = p2b.leakage(cases)
+    typer.echo(json.dumps({"cases": len(cases), "leakage": leak}))
+    if any(leak.values()):
+        raise typer.Exit(code=1)
+    lf = p2b.long_form(cases)
+    dev = lf[lf["season"].isin(p2b.DEV_SEASONS)].reset_index(drop=True)
+    test = lf[lf["season"] == p2b.TEST_SEASON].reset_index(drop=True)
+    result = p2b.score(dev, test)
+    result["counts"] = {
+        "cases": len(cases),
+        "by_station": cases.groupby("station").size().to_dict(),
+        "dev_rows": len(dev),
+        "test_rows": len(test),
+        "leakage": leak,
+    }
+    (out / "result.json").write_text(json.dumps(result, indent=1, default=str))
+    typer.echo(json.dumps(result["primary"], indent=1))
+
+
+@app.command("cli-archive-pull")
+def cli_archive_pull(
+    out: str = typer.Option("data/raw/cli_afos", help="Output root"),
+    first_season: int = typer.Option(2022, help="First winter, by its January"),
+    last_season: int = typer.Option(2026, help="Last winter, by its January"),
+) -> None:
+    """Every issued CLI version (IEM AFOS archive), November to March, snow stations."""
+    import time as _time
+    from datetime import UTC
+    from datetime import date as _date
+    from datetime import datetime as _dt
+    from pathlib import Path
+
+    import httpx
+
+    from pmw.utils.config import load_stations_config
+    from pmw.weather.cli_text import pull_month
+
+    _setup_logging()
+    pils = sorted({s.cli_product for s in load_stations_config().stations.values()})
+    today = _dt.now(UTC).date()
+    months = [
+        _date(y, m, 1)
+        for season in range(first_season, last_season + 1)
+        for y, m in ((season - 1, 11), (season - 1, 12), (season, 1), (season, 2), (season, 3))
+    ]
+    n = 0
+    with httpx.Client(timeout=120, headers={"User-Agent": "pmw-research/0.1"}) as client:
+        for pil in pils:
+            for first in months:
+                if pull_month(client, Path(out), pil, first, today):
+                    n += 1
+                    _time.sleep(1.5)  # sequential and paced, as IEM asks
+            typer.echo(f"{pil}: done ({n} months fetched so far)")
+
+
+@app.command("cli-archive-build")
+def cli_archive_build(
+    raw: str = typer.Option("data/raw/cli_afos"),
+    out: str = typer.Option("data/interim/obs/cli_versions.parquet"),
+) -> None:
+    """Table of every issued CLI version (intraday and final) with its issue time."""
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw.utils.config import load_stations_config
+    from pmw.weather.cli_text import build_table
+
+    _setup_logging()
+    station_of = {v.cli_product: k for k, v in load_stations_config().stations.items()}
+    rows, bad = build_table(Path(raw), station_of)
+    df = pd.DataFrame(rows).drop_duplicates(
+        ["station", "issue_utc", "climate_date", "intraday", "correction"]
+    )
+    df.to_parquet(out)
+    typer.echo(
+        json.dumps({"products": len(df), "unparsed": bad, "intraday": int(df["intraday"].sum())})
+    )
+
+
+@app.command("hrrr-pull")
+def hrrr_pull(
+    dataset: str = typer.Option("data/interim/snow/nowcast_dataset.parquet"),
+    out: str = typer.Option("data/raw/hrrr_points"),
+    parallel_runs: int = typer.Option(6),
+) -> None:
+    """HRRR point forecasts (Zarr archive) for every run a (station, t) dataset needs."""
+    from collections import Counter
+    from concurrent.futures import ThreadPoolExecutor
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw.utils.config import load_stations_config
+    from pmw.weather.hrrr_zarr import HrrrZarr, grid_point, pull_run, run_for
+
+    _setup_logging()
+    cfg = load_stations_config().stations
+    pts = {k: grid_point(v.lat, v.lon) for k, v in cfg.items()}
+    ds = pd.read_parquet(dataset, columns=["station", "t"])
+    need: dict[datetime, set[str]] = {}
+    for st, t in zip(ds["station"], pd.to_datetime(ds["t"], utc=True), strict=True):
+        need.setdefault(run_for(t.to_pydatetime()), set()).add(st)
+    runs = sorted(need)
+    typer.echo(f"{len(runs)} runs")
+    h = HrrrZarr(workers=max(16, 4 * parallel_runs))
+    status: Counter[str] = Counter()
+
+    def one(run):  # type: ignore[no-untyped-def]
+        return pull_run(h, Path(out), run, {s: pts[s] for s in sorted(need[run])})
+
+    with ThreadPoolExecutor(max_workers=parallel_runs) as pool:
+        for k, st in enumerate(pool.map(one, runs), 1):
+            status[st] += 1
+            if k % 100 == 0 or k == len(runs):
+                typer.echo(f"{k}/{len(runs)} {dict(status)} {h.bytes / 1e9:.1f} GB")
+    h.close()
 
 
 @app.command("p2a-forecasts")

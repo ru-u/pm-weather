@@ -1,0 +1,244 @@
+{
+ "lastUpdated": "2026-11-16 22:30:00-0600",
+ "data": [
+  {
+   "capacity": 69875,
+   "demand": 47334,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 0,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:00:00-0600",
+   "epoch": 1794808800000
+  },
+  {
+   "capacity": 69474,
+   "demand": 47220,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 5,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:05:00-0600",
+   "epoch": 1794809100000
+  },
+  {
+   "capacity": 69158,
+   "demand": 46988,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 10,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:10:00-0600",
+   "epoch": 1794809400000
+  },
+  {
+   "capacity": 69173,
+   "demand": 47081,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 15,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:15:00-0600",
+   "epoch": 1794809700000
+  },
+  {
+   "capacity": 69033,
+   "demand": 46910,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 20,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:20:00-0600",
+   "epoch": 1794810000000
+  },
+  {
+   "capacity": 69030,
+   "demand": 46800,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 25,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:25:00-0600",
+   "epoch": 1794810300000
+  },
+  {
+   "capacity": 69535,
+   "demand": 46730,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 30,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:30:00-0600",
+   "epoch": 1794810600000
+  },
+  {
+   "capacity": 69489,
+   "demand": 46329,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 35,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:35:00-0600",
+   "epoch": 1794810900000
+  },
+  {
+   "capacity": 69480,
+   "demand": 46291,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 40,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:40:00-0600",
+   "epoch": 1794811200000
+  },
+  {
+   "capacity": 69460,
+   "demand": 46356,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 45,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:45:00-0600",
+   "epoch": 1794811500000
+  },
+  {
+   "capacity": 69408,
+   "demand": 46221,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 50,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:50:00-0600",
+   "epoch": 1794811800000
+  },
+  {
+   "capacity": 69361,
+   "demand": 46232,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 55,
+   "hourEnding": 0,
+   "timestamp": "2026-11-16 00:55:00-0600",
+   "epoch": 1794812100000
+  },
+  {
+   "capacity": 69323,
+   "demand": 46097,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 0,
+   "hourEnding": 1,
+   "timestamp": "2026-11-16 01:00:00-0600",
+   "epoch": 1794812400000
+  },
+  {
+   "capacity": 69337,
+   "demand": 46049,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 5,
+   "hourEnding": 1,
+   "timestamp": "2026-11-16 01:05:00-0600",
+   "epoch": 1794812700000
+  },
+  {
+   "capacity": 70421,
+   "demand": 50319,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 20,
+   "hourEnding": 22,
+   "timestamp": "2026-11-16 22:20:00-0600",
+   "epoch": 1794889200000
+  },
+  {
+   "capacity": 70395,
+   "demand": 50032,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 25,
+   "hourEnding": 22,
+   "timestamp": "2026-11-16 22:25:00-0600",
+   "epoch": 1794889500000
+  },
+  {
+   "capacity": 70568,
+   "demand": 49889,
+   "forecast": 0,
+   "dstFlag": 0,
+   "interval": 30,
+   "hourEnding": 22,
+   "timestamp": "2026-11-16 22:30:00-0600",
+   "epoch": 1794889800000
+  },
+  {
+   "capacity": 70787,
+   "demand": 49886,
+   "forecast": 1,
+   "dstFlag": 0,
+   "interval": 35,
+   "hourEnding": 22,
+   "available": 71502,
+   "timestamp": "2026-11-16 22:35:00-0600",
+   "epoch": 1794890100000
+  },
+  {
+   "capacity": 71005,
+   "demand": 49884,
+   "forecast": 1,
+   "dstFlag": 0,
+   "interval": 40,
+   "hourEnding": 22,
+   "available": 72436,
+   "timestamp": "2026-11-16 22:40:00-0600",
+   "epoch": 1794890400000
+  },
+  {
+   "capacity": 71223,
+   "demand": 49881,
+   "forecast": 1,
+   "dstFlag": 0,
+   "interval": 45,
+   "hourEnding": 22,
+   "available": 73371,
+   "timestamp": "2026-11-16 22:45:00-0600",
+   "epoch": 1794890700000
+  }
+ ],
+ "forecast": [
+  {
+   "deliveryDate": "2026-11-17",
+   "dstFlag": "N",
+   "hourEnding": 1,
+   "deliveryDateHrBegin": "2026-11-17 00:00:00",
+   "deliveryDateHrEnd": "2026-11-17 01:00:00",
+   "availCapGen": 75963,
+   "forecastedDemand": 46585,
+   "timestamp": "2026-11-17 01:00:00-0600",
+   "epoch": 1794898800000
+  },
+  {
+   "deliveryDate": "2026-11-17",
+   "dstFlag": "N",
+   "hourEnding": 2,
+   "deliveryDateHrBegin": "2026-11-17 01:00:00",
+   "deliveryDateHrEnd": "2026-11-17 02:00:00",
+   "availCapGen": 76746,
+   "forecastedDemand": 45863,
+   "timestamp": "2026-11-17 02:00:00-0600",
+   "epoch": 1794902400000
+  },
+  {
+   "deliveryDate": "2026-11-17",
+   "dstFlag": "N",
+   "hourEnding": 3,
+   "deliveryDateHrBegin": "2026-11-17 02:00:00",
+   "deliveryDateHrEnd": "2026-11-17 03:00:00",
+   "availCapGen": 76847,
+   "forecastedDemand": 45558,
+   "timestamp": "2026-11-17 03:00:00-0600",
+   "epoch": 1794906000000
+  }
+ ],
+ "_note": "Real response of 2026-11-16 22:30 CT, trimmed: first 14 and last 3 actual points, first 3 forecast points, first 3 hourly forecast rows."
+}

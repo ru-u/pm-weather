@@ -270,3 +270,16 @@ def test_parse_nbh_rejects_misaligned_hours():
     text = _text("nbh_KDFW_2020060112.txt").replace(" UTC  13 14", " UTC  14 15", 1)
     with pytest.raises(ValueError):
         parse_nbh_block(text)
+
+
+def test_header_without_version_since_2026_11_03():
+    from pmw.weather.nbm_text import parse_nbh_block, split_blocks
+
+    text = _text("nbh_KIAH_2026110504.txt")
+    b = parse_nbh_block(text)
+    assert (b.station, b.version) == ("KIAH", "")
+    assert b.issue == datetime(2026, 11, 5, 4, tzinfo=UTC)
+    assert b.values["TMP"][datetime(2026, 11, 5, 5, tzinfo=UTC)] == 61
+    assert b.values["TMP"][datetime(2026, 11, 5, 21, tzinfo=UTC)] == 82
+    two = (text + text.replace("KIAH  ", "KDFW  ", 1)).encode()
+    assert set(split_blocks(two)) == {"KIAH", "KDFW"}

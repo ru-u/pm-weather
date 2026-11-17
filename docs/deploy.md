@@ -14,7 +14,7 @@ Status: **deployed 2026-11-14, logger running since 16:12 UTC.**
 | `logger` | always-on service | `pmw log` | region `us-east4`, restart policy ALWAYS, 1 replica | bucket credentials only |
 | `daily-report` | cron service | `pmw report` | schedule `15 0 * * *` (00:15 UTC), region `us-east4`, restart policy NEVER | bucket credentials only |
 | `pmw-data` | bucket | | region `iad` (US East) | |
-| `forecast-snapshot` | cron, not built yet | NBM text bulletins, ERCOT load forecast | | bucket and ERCOT credentials |
+| `ercot-live` | cron service, deployed 2026-11-17 04:37 UTC (D-046) | ERCOT dashboard load, latest NP3-565-CD posting, NBH for the Texas stations | hourly at :35 | bucket credentials; ERCOT credentials as references to `ercot-jobs` |
 | `trader` | not built, separate later | | | the ONLY service that ever gets Kalshi keys |
 
 Both services build from the repo's `Dockerfile` (auto-detected; core
@@ -216,6 +216,53 @@ Jobs run so far:
   2026-11-16 && pmw ercot-backfill np3-565-cd 2017-06-01 2026-11-16
   --post-hours 23,5,9,13,16"`. Forecasts are kept only for postings at
   23, 05, 09, 13 and 16 CT (the P3A decision slots), about 1.1 GB instead of 5.4 GB.
+
+## `ercot-live` cron service (D-046)
+
+One snapshot per run (`pmw ercot-live`, `src/pmw/energy/live.py`): ERCOT's public
+dashboard (today's 5-minute demand), NBH bulletins for the five Texas stations
+(cycles 1 and 2 hours back, block offsets kept in the bucket), every new
+NP3-565-CD posting plus NP3-910-ER and NP6-346-CD of the last three days (through
+`jobs.backfill`, same paths as the history), and Kalshi incentive programs once
+per UTC day. Each part fails on its own; a run summary is written to
+`live/ercot/runs/`. Schedule `5,35 * * * *` (twice an hour, just after each :30
+forecast posting and after each hour's load), restart policy NEVER.
+
+ERCOT credentials are Railway references to `ercot-jobs`, so the values are
+stored once:
+
+```bash
+railway add --service ercot-live \
+  --variables 'PMW_S3_BUCKET=${{pmw-data.BUCKET}}' \
+  --variables 'PMW_S3_ENDPOINT=${{pmw-data.ENDPOINT}}' \
+  --variables 'PMW_S3_ACCESS_KEY_ID=${{pmw-data.ACCESS_KEY_ID}}' \
+  --variables 'PMW_S3_SECRET_ACCESS_KEY=${{pmw-data.SECRET_ACCESS_KEY}}' \
+  --variables 'PMW_S3_REGION=${{pmw-data.REGION}}' \
+  --variables 'ERCOT_API_USERNAME=${{ercot-jobs.ERCOT_API_USERNAME}}' \
+  --variables 'ERCOT_API_PASSWORD=${{ercot-jobs.ERCOT_API_PASSWORD}}' \
+  --variables 'ERCOT_PUBLIC_API_SUBSCRIPTION_KEY=${{ercot-jobs.ERCOT_PUBLIC_API_SUBSCRIPTION_KEY}}'
+railway variable set RAILWAY_DOCKERFILE_PATH=Dockerfile --service ercot-live --skip-deploys
+railway scale --service ercot-live us-east=1
+railway api "$M" --raw-var s=<ercot-live id> --raw-var e=<environment id> \
+  --var 'i={"restartPolicyType":"NEVER","startCommand":"pmw ercot-live","cronSchedule":"5,35 * * * *"}'
+railway up --service ercot-live --ci
+railway cron list --service ercot-live
+```
+
+**Cost estimate (before deploying).** A local run without ERCOT credentials took
+about 40 s, most of it two first-time 28 MB NBH downloads; later runs use range
+requests (about 10 small requests) plus the ERCOT calls, paced at one per 2.5 s
+(token, three archive listings, one or two downloads), so about 20 to 30 s and
+about 150 MB of memory. 48 runs a day is about 12 hours of runtime a month:
+memory about 1.8 GB-hours ($0.03), CPU under $0.02, bucket writes about 2.5 MB a
+day (75 MB a month, about $0.01 of storage and egress). **Total under $0.10 a
+month**, against the roughly $1.0 to $1.4 for the rest of this project. Confirm
+with `railway usage projects` after a week.
+
+First run on Railway (manual trigger, 2026-11-17 04:38 UTC): 38 s, `ok=true`, 7
+ERCOT requests; dashboard 272 points, both NBH cycles (two first-time full
+downloads, offsets now in the bucket), 9,030 incentive programs, 43 forecast
+postings of 2026-11-16/17 plus the newest NP3-910-ER and NP6-346-CD documents.
 
 `railway run --service ercot-jobs ...` would run on the laptop with the
 credentials injected; the client refuses (`RAILWAY_REPLICA_REGION` is absent).

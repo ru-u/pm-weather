@@ -1,0 +1,364 @@
+
+922 
+CDUS41 KBOX 012126
+CLIBOS
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE BOSTON/NORTON MA
+526 PM EDT MON NOV 01 2021
+
+...................................
+
+...THE BOSTON MA CLIMATE SUMMARY FOR NOVEMBER 1 2021...
+VALID AS OF 0500 PM LOCAL TIME.
+
+CLIMATE NORMAL PERIOD 1991 TO 2020
+CLIMATE RECORD PERIOD 1872 TO 2021
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ TODAY                                                               
+  MAXIMUM         60    116 PM  77    1974  57      3       50       
+  MINIMUM         50    559 AM  26    1885  42      8       37       
+  AVERAGE         55                        50      5       44     
+
+PRECIPITATION (IN)                                                    
+  TODAY            0.00          2.67 1895   0.12  -0.12     0.62     
+  MONTH TO DATE    0.00                      0.12  -0.12     0.62     
+  SINCE SEP 1     12.58                      7.71   4.87     6.57     
+  SINCE JAN 1     48.54                     35.75  12.79    28.29     
+
+SNOWFALL (IN)                                                              
+  TODAY            0.0           T    1965   0.0    0.0      0.0      
+  MONTH TO DATE    0.0                       0.0    0.0      0.0      
+  SINCE SEP 1      0.0                       0.2   -0.2      4.3      
+  SINCE JUL 1      0.0                       0.2   -0.2      4.3      
+  SNOW DEPTH      MM                                                  
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  TODAY           10                        16     -6       21        
+  MONTH TO DATE   10                        16     -6       21        
+  SINCE SEP 1    186                       413   -227      406        
+  SINCE JUL 1    195                       422   -227      408        
+
+ COOLING                                                              
+  TODAY            0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE SEP 1    170                       100     70       97        
+  SINCE JAN 1   1146                       800    346      924        
+...................................................................
+
+
+WIND (MPH)                                                            
+  HIGHEST WIND SPEED    22   HIGHEST WIND DIRECTION     W (270)       
+  HIGHEST GUST SPEED    29   HIGHEST GUST DIRECTION     W (280)       
+  AVERAGE WIND SPEED    13.7                                        
+
+
+SKY COVER                                                             
+  POSSIBLE SUNSHINE  MM                                                 
+  AVERAGE SKY COVER 0.2                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED TODAY.                             
+  NO SIGNIFICANT WEATHER WAS OBSERVED.                                  
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    89          1200 AM                                      
+ LOWEST     37           200 PM                                      
+ AVERAGE    63                                                        
+
+..........................................................
+
+
+THE BOSTON MA CLIMATE NORMALS FOR TOMORROW
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   56        83      1950                      
+ MINIMUM TEMPERATURE (F)   42        26      1879                      
+                                             1965                     
+
+
+SUNRISE AND SUNSET                                                    
+NOVEMBER  1 2021......SUNRISE   718 AM EDT   SUNSET   537 PM EDT     
+NOVEMBER  2 2021......SUNRISE   719 AM EDT   SUNSET   536 PM EDT     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+
+158 
+CDUS41 KBOX 020545
+CLIBOS
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE BOSTON/NORTON MA
+145 AM EDT TUE NOV 02 2021
+
+...................................
+
+...THE BOSTON MA CLIMATE SUMMARY FOR NOVEMBER 1 2021...
+
+CLIMATE NORMAL PERIOD 1991 TO 2020
+CLIMATE RECORD PERIOD 1872 TO 2021
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ YESTERDAY                                                           
+  MAXIMUM         60    116 PM  77    1974  57      3       50       
+  MINIMUM         47   1136 PM  26    1885  42      5       37       
+  AVERAGE         54                        50      4       44     
+
+PRECIPITATION (IN)                                                    
+  YESTERDAY        0.00          2.67 1895   0.12  -0.12     0.62     
+  MONTH TO DATE    0.00                      0.12  -0.12     0.62     
+  SINCE SEP 1     12.58                      7.71   4.87     6.57     
+  SINCE JAN 1     48.54                     35.75  12.79    28.29     
+
+SNOWFALL (IN)                                                              
+  YESTERDAY        0.0           T    1965   0.0    0.0      0.0      
+  MONTH TO DATE    0.0                       0.0    0.0      0.0      
+  SINCE SEP 1      0.0                       0.2   -0.2      4.3      
+  SINCE JUL 1      0.0                       0.2   -0.2      4.3      
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  YESTERDAY       11                        16     -5       21        
+  MONTH TO DATE   11                        16     -5       21        
+  SINCE SEP 1    187                       413   -226      406        
+  SINCE JUL 1    196                       422   -226      408        
+
+ COOLING                                                              
+  YESTERDAY        0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE SEP 1    170                       100     70       97        
+  SINCE JAN 1   1146                       800    346      924        
+...................................................................
+
+
+WIND (MPH)                                                            
+  RESULTANT WIND SPEED  12   RESULTANT WIND DIRECTION   W (260)       
+  HIGHEST WIND SPEED    22   HIGHEST WIND DIRECTION     W (270)       
+  HIGHEST GUST SPEED    29   HIGHEST GUST DIRECTION     W (280)       
+  AVERAGE WIND SPEED    12.8                                        
+
+
+SKY COVER                                                             
+  POSSIBLE SUNSHINE  MM                                                 
+  AVERAGE SKY COVER 0.2                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED YESTERDAY.                         
+  NO SIGNIFICANT WEATHER WAS OBSERVED.                                  
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    89          1200 AM                                      
+ LOWEST     37           200 PM                                      
+ AVERAGE    63                                                        
+
+..........................................................
+
+
+THE BOSTON MA CLIMATE NORMALS FOR TODAY
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   56        83      1950                      
+ MINIMUM TEMPERATURE (F)   42        26      1879                      
+                                             1965                     
+
+
+SUNRISE AND SUNSET                                                    
+NOVEMBER  2 2021......SUNRISE   719 AM EDT   SUNSET   536 PM EDT     
+NOVEMBER  3 2021......SUNRISE   720 AM EDT   SUNSET   535 PM EDT     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+
+858 
+CDUS44 KEWX 301342
+CLIAUS
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE AUSTIN/SAN ANTONIO
+742 AM CST TUE NOV 30 2021
+
+...................................
+
+...THE AUSTIN BERGSTROM CLIMATE SUMMARY FOR NOVEMBER 30 2021...
+VALID AS OF 0740 AM LOCAL TIME.
+
+CLIMATE NORMAL PERIOD: 1991 TO 2020
+CLIMATE RECORD PERIOD: 1943 TO 2021
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE           
+                VALUE   (LST)  VALUE       VALUE  FROM               
+                                                  NORMAL           
+................................................................
+TEMPERATURE (F)                                                          
+ TODAY                                                               
+  MAXIMUM         49  12:23 AM  87    2019  67    -18                 
+  MINIMUM         39   7:16 AM  20    1976  43     -4                 
+  AVERAGE         44                                               
+
+PRECIPITATION (IN)                                                    
+  TODAY            0.00          2.28 1968   0.07  -0.07              
+  MONTH TO DATE    2.77                      2.68   0.09              
+  SINCE SEP 1      9.08                      9.96  -0.88              
+  SINCE JAN 1     39.18                     32.96   6.22              
+
+................................................................
+
+
+THE AUSTIN BERGSTROM CLIMATE NORMALS FOR TOMORROW
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   67        84      2012                      
+ MINIMUM TEMPERATURE (F)   43        22      2020                      
+
+
+SUNRISE AND SUNSET                                                    
+NOVEMBER 30 2021......SUNRISE   7:09 AM CST   SUNSET   5:30 PM CST     
+DECEMBER  1 2021......SUNRISE   7:10 AM CST   SUNSET   5:30 PM CST     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+
+
+619 
+CDUS43 KLOT 012245
+CLIORD
+
+CLIMATE REPORT 
+NATIONAL WEATHER SERVICE CHICAGO IL
+445 PM CST MON DEC 01 2025
+
+...................................
+
+...THE CHICAGO-OHARE CLIMATE SUMMARY FOR DECEMBER 1 2025...
+SNOWFALL VALID AS OF 1200 PM LOCAL TIME.
+ALL OTHER OBSERVATIONS VALID TODAY AS OF 0400 PM LOCAL TIME.
+
+CLIMATE NORMAL PERIOD: 1991 TO 2020
+CLIMATE RECORD PERIOD: 1871 TO 2025
+
+
+WEATHER ITEM   OBSERVED TIME   RECORD YEAR NORMAL DEPARTURE LAST      
+                VALUE   (LST)  VALUE       VALUE  FROM      YEAR     
+                                                  NORMAL           
+...................................................................
+TEMPERATURE (F)                                                          
+ TODAY                                                               
+  MAXIMUM         30   1:54 PM  68    1970  41    -11       27        
+  MINIMUM         17   3:35 AM  -6    1893  28    -11       14        
+  AVERAGE         24                        35    -11       21     
+
+PRECIPITATION (IN)                                                    
+  TODAY            0.02          1.23 2006   0.08  -0.06     0.00     
+  MONTH TO DATE    0.02                      0.08  -0.06     0.00     
+  SINCE DEC 1      0.02                      0.08  -0.06     0.00     
+  SINCE JAN 1     27.74                     35.83  -8.09    32.99     
+
+SNOWFALL (IN)                                                              
+  TODAY            0.0           7.8  1978   0.2   -0.2      0.0      
+  MONTH TO DATE    0.0                       0.2   -0.2      0.0      
+  SINCE DEC 1      0.0                       0.2   -0.2      0.0      
+  SINCE JUL 1     10.4                       2.2    8.2      2.9      
+  SNOW DEPTH       6                                                 
+
+DEGREE DAYS                                                           
+ HEATING                                                              
+  TODAY           41                        30     11       44        
+  MONTH TO DATE   41                        30     11       44        
+  SINCE DEC 1     41                        30     11       44        
+  SINCE JUL 1   1010                      1181   -171      811        
+
+ COOLING                                                              
+  TODAY            0                         0      0        0        
+  MONTH TO DATE    0                         0      0        0        
+  SINCE DEC 1      0                         0      0        0        
+  SINCE JAN 1   1215                      1003    212     1212        
+...................................................................
+
+
+WIND (MPH)                                                            
+  HIGHEST WIND SPEED    10   HIGHEST WIND DIRECTION    SE (150)       
+  HIGHEST GUST SPEED    14   HIGHEST GUST DIRECTION     S (190)       
+  AVERAGE WIND SPEED     3.5                                        
+
+
+SKY COVER                                                             
+  AVERAGE SKY COVER 0.9                                                 
+
+
+WEATHER CONDITIONS                                                    
+THE FOLLOWING WEATHER WAS RECORDED TODAY.                             
+  LIGHT SNOW                                                          
+  FOG                                                                 
+
+
+RELATIVE HUMIDITY (PERCENT)
+ HIGHEST    89           4:00 PM                                      
+ LOWEST     61          12:00 PM                                      
+ AVERAGE    75                                                        
+
+..........................................................
+
+
+THE CHICAGO-OHARE CLIMATE NORMALS FOR TOMORROW
+                         NORMAL    RECORD    YEAR                     
+ MAXIMUM TEMPERATURE (F)   41        71      1982                      
+ MINIMUM TEMPERATURE (F)   28        -1      1893                      
+                                             1942                     
+
+
+SUNRISE AND SUNSET                                                    
+DECEMBER  1 2025......SUNRISE   7:00 AM CST   SUNSET   4:21 PM CST     
+DECEMBER  2 2025......SUNRISE   7:01 AM CST   SUNSET   4:21 PM CST     
+
+
+-  INDICATES NEGATIVE NUMBERS.
+R  INDICATES RECORD WAS SET OR TIED.
+MM INDICATES DATA IS MISSING.
+T  INDICATES TRACE AMOUNT.
+
+
+
+
+$$
+

@@ -30,7 +30,13 @@ research = [
     "properscoring>=0.1",
 ]
 modeling = ["ngboost>=0.5", "xgboost>=2.0", "lightgbm>=4.3"]
-weather = ["herbie-data>=2024.8", "xarray>=2024.6", "cfgrib>=0.9.12", "metpy>=1.6"]
+weather = [
+    "herbie-data>=2024.8",
+    "xarray>=2024.6",
+    "cfgrib>=0.9.12",
+    "metpy>=1.6",
+    "numcodecs>=0.13",
+]
 energy = ["gridstatus>=0.28"]
 
 [dependency-groups]
@@ -71,7 +77,7 @@ check_untyped_defs = true
 no_implicit_optional = true
 
 [[tool.mypy.overrides]]
-module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "pandas", "pandas.*"]
+module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "pandas", "pandas.*", "numcodecs", "numcodecs.*", "sklearn", "sklearn.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

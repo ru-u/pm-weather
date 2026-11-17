@@ -41,10 +41,11 @@ BUCKET_URL = "https://noaa-nbm-grib2-pds.s3.amazonaws.com"
 PRODUCTS = {"nbp": "blend_nbptx", "nbs": "blend_nbstx", "nbh": "blend_nbhtx"}
 RANGE_BYTES = 4500  # larger than any CONUS station block seen (2997 to 3807 bytes)
 _HEADER_RE = re.compile(
-    r"^ ?(?P<station>[A-Z0-9]{3,8}) +NBM (?P<version>V[\d.]+) (?P<product>NB[A-Z]) GUIDANCE +"
+    r"^ ?(?P<station>[A-Z0-9]{3,8}) +NBM +(?P<version>V[\d.]+)? *(?P<product>NB[A-Z]) GUIDANCE +"
     r"(?P<mon>\d{1,2})/(?P<day>\d{1,2})/(?P<year>\d{4}) +(?P<hhmm>\d{4}) UTC"
 )
-_ANY_HEADER_RE = re.compile(rb"(?m)^ ?([A-Z0-9]{3,8}) +NBM V[\d.]+ NB[A-Z] GUIDANCE")
+# Since the 14Z cycle of 2026-11-03 the version is left blank ("NBM  NBH GUIDANCE").
+_ANY_HEADER_RE = re.compile(rb"(?m)^ ?([A-Z0-9]{3,8}) +NBM +(?:V[\d.]+)? *NB[A-Z] GUIDANCE")
 PERCENTILES = {"P1": 10, "P2": 25, "P5": 50, "P7": 75, "P9": 90}
 LABEL_WIDTH = 6  # one space plus a five-character element label, e.g. " S24P1"
 # Normal lag from cycle time to public availability, and the cut-off beyond
@@ -119,7 +120,7 @@ def parse_header(line: str) -> tuple[str, str, str, datetime]:
         int(m["year"]), int(m["mon"]), int(m["day"]),
         int(m["hhmm"][:2]), int(m["hhmm"][2:]), tzinfo=UTC,
     )  # fmt: skip
-    return m["station"], m["version"], m["product"], issue
+    return m["station"], m["version"] or "", m["product"], issue
 
 
 def parse_nbp_block(text: str) -> NbpBlock:
@@ -381,9 +382,9 @@ class NbmTextArchive:
 
     def fetch_cycle(self, cycle: datetime, stations: list[str]) -> list[FetchedBlock]:
         url = bulletin_url(self.product, cycle)
-        # NBH lists stations at the same offsets at every cycle hour (checked on
-        # 2024-2026 files), so one set of offsets serves all hours.
-        hour = 0 if self.product == "nbh" else cycle.hour
+        # Offsets are remembered per cycle hour: NBS orders stations differently by
+        # hour, and NBH did too in 2023-24 (same at every hour in 2020-22 and 2025-26).
+        hour = cycle.hour
         known = [s for s in stations if (hour, s) in self.offsets]
         results: dict[str, FetchedBlock] = {}
         moved = len(known) < len(stations)
