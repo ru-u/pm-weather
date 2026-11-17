@@ -302,3 +302,28 @@ calibration: validation Brier 0.072 against 0.090 for the P3A method, best at
 every decision hour, gain growing through the day; intervals calibrated (81.5% /
 95.5%). This licenses P4E (model vs Kalshi market), to be pre-registered before
 any price is joined. See `docs/findings/2026-11-16-phase4-ercot-v1.md`.
+
+**D-042. Kalshi liquidity incentives on our series, and the November volume
+collapse (2026-11-16).** Prompted by the owner. Kalshi's public
+`GET /incentive_programs` (no auth) lists every program: series, market, start
+and end, `period_reward` in 1/10,000 dollar (1,000,000 = $100, checked against
+the site), `target_size_fp` and `discount_factor_bps`. Snapshot saved in
+`data/raw/kalshi/incentives/`. Facts, quotes and volume only, no model or
+outcome joined:
+- KXTXERCOTPEAKD had liquidity programs on 25 events between 2026-09-04 and
+  2026-10-29, $50 per market per day, target 1,000 contracts. Usually a few
+  strikes each day; the whole 19-strike ladder on Oct 22 to Oct 29 (about $950 a
+  day). None active or upcoming today. KXTXERCOTPEAK (annual) has one now ($250
+  per market per week); KXSNOWDAYS has 22 markets at $175 per market per week.
+- Volume per KXTXERCOTPEAKD event (median contracts): September 41,966 without
+  a program and 25,651 with one, October 16,500 and 16,275, November 1 to 15
+  only 446 (none above 4,300). Incentive days did not trade more.
+- Consequences: (1) P4E's sample has two quote regimes (incentive days and
+  November's near-empty books), so P4E will report results with and without
+  incentive days and with and without November, as registered strata. (2) Taker
+  capacity outside summer and cold snaps is close to zero, so the tradable
+  ERCOT season is June to September plus winter cold events; P3A-S should be
+  powered on those. (3) When a program is on, quoting around a calibrated model
+  (no maker fee on these series) earns a reward on top of the spread. That is a
+  separate maker strategy, to be designed only after P4E. (4) Programs come and
+  go without notice, so the live-inputs job logs `incentive_programs` daily.

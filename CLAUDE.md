@@ -182,10 +182,16 @@ data/         gitignored: raw/ interim/ processed/ live/
    DONE 2026-11-16, CONDITIONAL (P3A, D-038). The market was more accurate than
    ERCOT's own load forecast (D = -0.011, CI excludes 0); taker P&L positive but
    on 54 trades with negative perceived/realized correlation; summer capacity is
-   fine. Settlement replication 1,334/1,334. Do not re-run or retune P3A. ERCOT
-   modeling only with a documented forecast weakness; next is a prospective
-   test on live books through summer 2027 (P3A-S, register first).
-4. Modeling, only if a gate passes.
+   fine. Settlement replication 1,334/1,334. Do not re-run or retune P3A. A
+   prospective test on live books through summer 2027 (P3A-S) is still to be
+   registered.
+4. Modeling. OPEN for ERCOT and snow by owner decision (D-040, 2026-11-16),
+   overriding the "documented forecast weakness" clause in 2 and 3. The rest
+   of the discipline stands: train / validate / held-out, choose on
+   validation only, pre-register, score once. ERCOT nowcast v1 done (D-041);
+   v2 and the market test P4E next. The Kalshi period (2026-08-28 on) is not
+   used for any model choice. Kalshi liquidity incentives come and go per
+   series: see D-042.
 5. Paper trading, then tiny live with hard caps and a kill switch, only on
    written approval.
 

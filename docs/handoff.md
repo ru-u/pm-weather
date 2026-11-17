@@ -10,7 +10,7 @@ only what changed since it was last updated, plus the work queue.
 
 Continue the pm-weather project. Read `CLAUDE.md`, then
 `docs/findings/2026-11-16-phase4-ercot-v1.md`, `docs/phase4_ercot_plan.md`,
-decisions D-040 and D-041 in `docs/decisions.md`, and the P3A section of
+decisions D-040 to D-042 in `docs/decisions.md`, and the P3A section of
 `docs/preregistration.md`. Then do the work queue below in order. Report after
 each chunk (what was built, what was verified, what is next) in plain language
 with a small table where numbers matter, and commit after each meaningful step
@@ -114,7 +114,7 @@ Rebuild with `uv run pmw ercot-build`.
   or LogNormal on R/F_rem), and XGBoost quantiles. Keep only what improves
   validation Brier at every decision hour.
 - Report the v1→v2 table by hour and on the hottest 20% of days, coverage,
-  PIT, and feature importance. Write it up in a findings doc and a D-042.
+  PIT, and feature importance. Write it up in a findings doc and a D-043 (D-042 is the incentives note).
 - Choose ONE final model configuration on validation and freeze it, with its
   git hash.
 
@@ -136,7 +136,7 @@ Write P4E in `docs/preregistration.md` before joining any price.
 - Record the caveat: this period was P3A's test sample, so P3A's result
   (market beat ERCOT's forecast) is already known. Model choices must be
   shown to come only from validation, by git history and dates.
-- Freeze it (timestamp in UTC), run once, report, record a decision (D-043).
+- Freeze it (timestamp in UTC), run once, report, record a decision (D-044).
   Do not retune afterwards. Anything further is a new registered experiment.
 
 ### 3. Live inputs for paper trading (ERCOT)
@@ -146,6 +146,9 @@ The model needs at decision time the same inputs it was trained on.
   its terms and whether it is geo-blocked. If it is, run it from Railway.
 - Each hourly NP3-565 posting as it appears.
 - The latest NBM bulletin for the four Texas stations.
+- Kalshi `GET /incentive_programs` (public, no auth) once a day, so we know
+  when a series has a liquidity reward (D-042). This one can run in
+  `daily-report`: it needs no ERCOT credentials.
 
 Build this as a small cron on Railway that writes snapshots to the bucket. Run
 it from `ercot-jobs` or from a new service; whichever service makes ERCOT
