@@ -66,7 +66,7 @@ def test_registry_without_plugins_has_baselines(monkeypatch):
     assert isinstance(pl.get_strategy(), NaiveTaker)
     assert isinstance(pl.get_model(), pl.ColumnModel)
     with pytest.raises(KeyError, match="unknown strategy"):
-        pl.get_strategy("storm_taker")
+        pl.get_strategy("not_installed")
 
 
 def test_params_precedence(monkeypatch, tmp_path):

@@ -72,6 +72,6 @@ def test_backtest_no_edge_no_entry(tmp_path):
 
 def test_unknown_strategy_fails_cleanly(tmp_path):
     r = runner.invoke(
-        app, ["backtest", str(_obs_file(tmp_path, 0.3, 0)), "--strategy", "storm_taker"]
+        app, ["backtest", str(_obs_file(tmp_path, 0.3, 0)), "--strategy", "not_installed"]
     )
     assert r.exit_code != 0 and "unknown strategy" in str(r.exception)
