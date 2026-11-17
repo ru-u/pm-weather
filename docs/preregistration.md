@@ -170,12 +170,89 @@ joined. These are not deviations.
 
 ## Experiment P2B: NBM calibration against CLI snowfall (no prices)
 
-**Status: DRAFT.** Descriptive study, so there is no go/no-go rule, but the
-targets, thresholds, leads and station list are fixed before scoring:
-24/48/72-hour CLI snowfall above 0.1, 1, 2, 4, 6, 8 and 12 inches; leads of 1,
-2, 3, 5 and 7 days; all first-order CLI stations with at least 90% snowfall
-report completeness in the winters used; winters 2020-21 to 2025-26; results
-split by NBM version. Test winter held out: 2025-26, touched once.
+**Status: FROZEN 2026-11-17 04:56 UTC. Drafted 2026-11-14; design resolved 2026-11-17
+(below), before any scoring.** Descriptive study with one registered test. It informs the snow
+storm-window model (Phase 4, D-040): where NBM's snowfall probabilities are
+miscalibrated, and whether a simple correction learned on past winters holds up
+on a held-out winter. No prices.
+
+### What changed from the 2026-11-14 draft, and why (before scoring)
+
+- Stations: the 14 snow settlement stations of `configs/stations.yaml` (NBP is
+  pulled for these), not "all first-order CLI stations" (hundreds of stations
+  and about 700,000 archive requests, for stations we do not trade).
+- Winters: 2021-22 to 2025-26 (November to March). NBM 24-hour snowfall
+  percentiles in the archive start with V4.0; our pull starts 2021-11-01.
+- Windows are climate days (local standard midnight to midnight), as Kalshi
+  settles, so NBM's 12Z-to-12Z periods are mapped with the P2A composite
+  (`models/nbm_composite.py`: NBS 6-hour shares for partial periods, Gaussian
+  copula rho_S 0.5 between periods). Scoring raw 12Z periods against CLI days
+  would mismatch the windows by 7 hours and make NBM look overconfident.
+
+### Sample
+
+- Every (station, window start D, window length n, lead L) with D from November 1
+  to March 31 of each winter, the whole window inside that range, n in {1, 2, 3}
+  climate days, L in {1, 2, 3, 5, 7} days. Decision time t = start of climate
+  day D (UTC) minus L days; the forecast uses only NBM cycles public before t
+  (`available_at`). Nothing in the window is observed at t.
+- Kept only if the composite uses no climatology (NBM reaches the end of the
+  window) and every day of the window has an observed value.
+- Outcome: CLI daily snowfall (IEM), ACIS where CLI is missing, as in P2A
+  (`features/obs_table.py`), rebuilt for the 14 stations in a separate file so
+  P2A's table is unchanged. Trace counts as 0.
+- Thresholds K: total above 0.1, 1, 2, 4, 6, 8 and 12 inches ("above" strictly,
+  as Kalshi; the composite's `prob_above`).
+
+### Splits
+
+Development: winters 2021-22 to 2024-25. Test: 2025-26, scored once. Caveat:
+P2A scored this composite on 2025-26 Kalshi events at these stations, so
+2025-26 is not untouched; P2A did not look at recalibration.
+
+### Reported (descriptive, development winters)
+
+Per threshold x lead x window length: cases, base rate, mean forecast, Brier,
+Brier skill against station climatology (the composite with no NBM, whole-season
+resampling from earlier seasons), reliability (10 bins) and Murphy terms; the
+same by NBM version; the logistic recalibration coefficients below (slope below 1
+means overconfident, intercept the bias).
+
+### Registered test
+
+Recalibration fitted on development winters, separately for each (threshold,
+window length), pooled over leads and stations: logit p' = a + b logit p, with p
+clipped to [0.001, 0.999], maximum likelihood. On 2025-26:
+`dB = Brier(raw NBM) - Brier(recalibrated)` per (case, threshold), averaged over
+all cases and thresholds; 95% interval by block bootstrap over ISO weeks of the
+window start (all stations together, since one storm moves several cities),
+10,000 resamples, seed 20261118. **A documented NBM weakness** (the term in
+D-038 and the Phase 2 rule) is: interval entirely above 0. Also reported per
+threshold, per lead and per window length (not decisive).
+
+### Implementation clarifications (at freezing, nothing scored)
+
+1. Code: `src/pmw/eval/p2b.py`, run once with `uv run pmw p2b`; outputs in
+   `data/processed/p2b/`. It stops before scoring if a leakage count is not 0.
+2. Observed table: `pmw obs-build --all-stations --out
+   data/interim/obs/daily_snow_p2b.parquet` (CLI 24,918 station-days, ACIS 1,172,
+   missing 2,008). Chicago Midway (KMDW) has no snowfall in its climate report or
+   in ACIS, so every KMDW window drops under the "every day observed" rule: 13
+   stations in practice.
+3. Climatology probabilities use the composite with no NBM at the same t
+   (whole-season resampling from earlier seasons), as in P2A.
+4. Synthetic known-answer runs (`tests/test_p2b.py`): forecasts with log-odds
+   stretched 2.2x are flagged (slope below 0.7, weakness documented);
+   calibrated forecasts are not.
+
+### Guardrails
+
+- Leakage: every NBM cycle used has `available_at` before t; no window day is
+  observed at t (count must be 0).
+- Recalibration fitted on development winters only; the test winter is read
+  once, after the code runs on a synthetic set with a known answer
+  (overconfident forecasts must be detected, calibrated ones must not).
+- Results go to `docs/findings/` whatever they show.
 
 ---
 
@@ -313,6 +390,43 @@ secondary only. No design choice was changed after seeing these numbers.
   exploratory.
 - Results are written to `docs/findings/` whatever they show.
 
+## Phase 4 experiments: registered privately, committed by hash
+
+The full texts of the four Phase 4 experiments (models, decision rules and
+execution rules) are kept in a private repository until each one is evaluated.
+Each was frozen before its data was scored; the sha256 of each text was
+published here on the day the repository was split (2026-11-17), so the text
+can be revealed later and checked against this commitment. See
+`docs/commitments.md` for how to verify.
+
+### Experiment P4E: frozen ERCOT nowcast (v2) versus the Kalshi market
+
+Frozen 2026-11-17 04:20 UTC. Settled KXTXERCOTPEAKD markets with operating day
+2026-08-28 to 2026-11-13; is the frozen nowcast (D-044) a better probability
+forecast than the Kalshi mid, and would a naive taker have made money after
+fees? Run once (see Results). Text sha256 `d57914df4968862ebd651b80a750f43f33bfacd776628f0c07268e8960e3df02`.
+
+### Experiment P4-paper: frozen ERCOT nowcast on live-logged books (prospective)
+
+Frozen 2026-11-17 04:45 UTC, before its first operating day. KXTXERCOTPEAKD
+markets with operating day 2026-11-18 to 2027-09-30, on books logged every 5
+minutes; also serves as P3A-S (the market against ERCOT's own forecast).
+Evaluated once, on or after 2027-10-15; data-health counts only until then.
+Text sha256 `ad023f9f9a5253cc0a5973a1939068f264fb5641db22f420b1cea0e44e69050f`.
+
+### Experiment P4S-T: frozen snow nowcast versus the composite, winter 2025-26 (no prices)
+
+Frozen 2026-11-17 14:25 UTC. On the 2025-26 winter, which no model choice used,
+is the frozen storm-window nowcast a better probability forecast than the P2A
+composite? Run once (see Results). Text sha256 `e81c0225541654cba5dc55957138b7a0a9c67c28ba222b59e18388de7ea4b0e1`.
+
+### Experiment P4S-paper: frozen snow nowcast on live-logged storm-window books (prospective)
+
+Frozen 2026-11-17 14:25 UTC, amended the same day before any sample market
+opened (see Deviations). Storm-window snow markets with windows from 2026-11-18
+to 2027-04-30, on books logged every 5 minutes. Evaluated once, on or after
+2027-05-15; data-health counts only until then. Text sha256 `df42ae563b20bd7c22df3c4eeb66b10df85b87a7fd00c387ed6a556711c31f90`.
+
 ---
 
 ## Results
@@ -325,9 +439,25 @@ secondary only. No design choice was changed after seeing these numbers.
   in 94.2% of resamples on 54 trades, with a perceived-versus-realized edge
   correlation of -0.33; capacity gate met (median stressed day 37,855
   contracts). See `docs/findings/2026-11-16-p3a-result.md`.
+- **P4E, run 2026-11-17 04:24 UTC: CONDITIONAL.** D = -0.0053 [-0.0175, +0.0086]
+  (the market was slightly more accurate than the frozen model; the sign flips
+  with the spread filter); taker P&L +$325 on 47 trades, positive in 98.1% of
+  resamples, perceived-versus-realized edge correlation +0.07. Details private
+  until P4-paper is evaluated.
+- **P2B, run 2026-11-17 04:57 UTC: no documented NBM weakness.** Recalibration
+  fitted on 2021-22 to 2024-25 did not improve 2025-26: dB = -0.0001
+  [-0.0017, +0.0014]. NBM skill against climatology on 2025-26 is 0.21 to 0.44 by
+  threshold. See `docs/findings/2026-11-17-p2b-result.md`.
+- **P4S-T, run 2026-11-17 14:27 UTC: CONFIRMED.** D = Brier(composite) −
+  Brier(model) = +0.0081 [+0.0057, +0.0109] (the frozen nowcast was more
+  accurate than the composite). Details private until P4S-paper is evaluated.
 
 ## Deviations
 
+- **P4S-paper, 2026-11-17, before any sample market opened: primary model changed
+  from v1 to v1.1** (a training-window selection problem found after P4S-T, D-051,
+  D-052). v1 kept as a secondary arm. The amendment is part of the committed
+  P4S-paper text.
 - **P3A, 2026-11-16 02:50 UTC, before any forecast was joined to a price or
   scored: meaning of "the model flagged InUseFlag = Y".** The frozen text
   assumed one in-use model per posting, as in the one 2026 file seen. The
@@ -338,3 +468,9 @@ secondary only. No design choice was changed after seeing these numbers.
   the literal reading of the registered sentence. For 2026 postings, where one
   model is flagged on every hour, nothing changes. Reason: data format, not
   results.
+- **P4E, 2026-11-17 04:22 UTC, first run crashed before any result was computed
+  or seen: column name clash.** The model rows carry the regression target `y`
+  (log ratio), which collided with the market outcome `y` in the join, so the run
+  stopped with a KeyError while building the primary metric. Fixed by dropping the
+  target column before the join, with a test that goes through
+  `build_observations`. Nothing in the design changed. Reason: code error.

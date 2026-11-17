@@ -337,3 +337,107 @@ none of it grants access); `docs/handoff.md` untracked and gitignored as a
 session-only file. History was scanned for every value in `.env` and `keys.txt`
 and for key-shaped strings: none found. Supersedes the "local only" note in
 D-017.
+
+**D-044. ERCOT nowcast v2 frozen for P4E: LightGBM with weather features
+(2026-11-16).** NBM hourly temperature forecasts (2020-05 on) and ASOS observations
+for five Texas stations, zone-weighted by trailing load share, joined on
+availability. Validation Brier 0.0710 against 0.0721 for v1 (paired weekly
+bootstrap CI [0.0005, 0.0017]), better at every decision hour, but no better on the
+hottest 20% of days and slightly worse in summer: ERCOT's forecast already carries
+the weather. NGBoost (normal, Laplace, t), XGBoost quantiles and three log-odds
+blends (cross-fitted) did not beat it at every hour, so none is kept. The fitted
+model is frozen with its sha256 in `docs/findings/2026-11-16-phase4-ercot-v2.md`;
+the next step is P4E, registered before any price is joined.
+
+**D-045. P4E is CONDITIONAL (2026-11-17).** The frozen ERCOT nowcast did not beat
+the Kalshi mid on accuracy (D = -0.0053, 95% CI [-0.0175, +0.0086]); a naive taker
+using it was profitable on 47 trades. Next: the prospective paper test P4-paper,
+registered first. Full entry private (sha256 `d46f3e7538b33d4760c8b2ece93dfa3c04cee14931e152bad602ce51684b4e2e`).
+
+**D-046. Live ERCOT inputs run in a new cron service `ercot-live`, not in
+`ercot-jobs` (2026-11-17; the owner delegated the choice: "weigh the benefits of
+each and make a decision").** Facts: ERCOT's public dashboard
+(`/api/1/services/read/dashboards/supply-demand.json`) needs no key, answered from
+the laptop, and holds the current day at 5-minute resolution; NBM bulletins (AWS)
+and Kalshi incentive programs are public too. Only the hourly NP3-565-CD posting
+needs ERCOT credentials. `ercot-jobs` is the one-shot runner whose start command is
+swapped for each backfill; turning it into the cron would stop live logging during
+every backfill, silently. A separate service keeps live snapshots and backfills
+independent, at the same cost (both are billed per second of runtime). The extra
+credential copy is avoided by setting `ercot-live`'s ERCOT variables as Railway
+references to `ercot-jobs`' (`${{ercot-jobs.ERCOT_API_USERNAME}}` and so on), so
+the values are stored and rotated in one place. `logger` and `daily-report` still
+hold no ERCOT credentials; the daily Kalshi incentive snapshot goes in
+`daily-report` (public endpoint). Note: P4-paper can rebuild model inputs from the
+archives afterwards (as P4E did), so `ercot-live` is not on its critical path; it
+measures what the live dashboard shows against the archived telemetry the model
+was trained on, and is the input feed any live trading would need.
+Implementation note (2026-11-17): the daily incentive snapshot runs in
+`ercot-live` (its first run of each UTC day) instead of `daily-report`, so
+`daily-report` did not need a redeploy; the endpoint is public either way.
+`ercot-live` deployed 2026-11-17 04:37 UTC, schedule `5,35 * * * *`; first run
+succeeded (see `docs/deploy.md`).
+
+**D-047. P2B: no documented NBM snowfall weakness; NBM enters the snow model
+unrecalibrated (2026-11-17).** Across 13 snow stations and 133,665 forecast cases
+(1 to 3 climate-day windows, leads 1 to 7 days, winters 2021-22 to 2025-26),
+NBM's composite probabilities beat station climatology by 0.21 to 0.44 in Brier
+skill on the held-out winter. Development winters show too much measurable snow
+at longer leads and some overconfidence at 1 to 2 inches, but these patterns
+shift with NBM version and winter: a logistic recalibration fitted on 2021-25 did
+not improve 2025-26 (dB = -0.0001, CI [-0.0017, +0.0014]). With P2A (the market
+beat this composite), the snow edge, if any, has to come from information NBM
+lacks during a storm (observed snowfall, HRRR, snow-to-liquid ratio, timing).
+Next: a storm-window nowcast plan before building. See
+`docs/findings/2026-11-17-p2b-result.md`.
+
+**D-048. Snow nowcast data choices, and a CLI parser fix (2026-11-17).** The
+nowcast's data and feature choices (HRRR from the AWS Zarr archive, read through
+`pmw.weather.hrrr_zarr`; ISO-week bootstrap blocks) are private until P4S-paper is
+evaluated. Public part: the CLI text parser marked a report intraday only on "VALID
+TODAY AS OF". Boston and Providence used "VALID AS OF 0500 PM" from 2021-11 to
+2024-02, and Austin and Dallas issue a "VALID AS OF 0740 AM" report, so 2,448
+intraday reports were read as finals. The parser now accepts both forms, and a
+report issued before its climate day ends is never treated as final. After the
+fix, first finals are issued 0.35 to 5.1 hours after the day ends (median 1.0 h).
+Settlement check: 394 reproduced, 0 contradicted. Full entry private (sha256
+`68eded817b135416439b5faad478fb0965267627f2e406383dcf0033d4139b25`).
+
+**D-049. Snow nowcast v1 chosen on the 2024-25 validation winter (2026-11-17).**
+Candidates were fitted on winters 2021-22 to 2023-24 and compared on 2024-25 only;
+the chosen model beat the P2A composite in every lead band on validation. Full
+entry private (sha256 `961f8b4cf9fbbfd62102d9ad668214b2d2c388f9465519633d9482f2ca113ba2`).
+
+**D-050. P4S-T: CONFIRMED; snow nowcast v1 frozen (2026-11-17).** Frozen model
+sha256 `78867cd2f1abd34c34dbf344f59ee4fd14eb39d6c99c16422c6e87294f012b93`. P4S-T,
+run once on 2025-26: D = Brier(composite) − Brier(model) = +0.0081
+[+0.0057, +0.0109]. P4S-paper evaluates on or after 2027-05-15. Full entry private
+(sha256 `c93db483dcfdc0f9f9dc20ed8c4bebc49a3b930f7a604599aa307c04915a93da`).
+
+**D-051. Outcome-based window selection found in the snow nowcast training data
+(2026-11-17, post hoc).** The candidate-window rule admitted some windows because it
+snowed, not because snow was forecast. P4S-T's result holds on forecast-selected
+windows only (D = +0.0075 [+0.0053, +0.0102]) and stands as recorded. Full entry
+private (sha256 `2a6da5ae42d20ca494d9a1a555729331335f4af90afda38c91b59819b09b9377`).
+
+**D-052. P4S-paper uses snow nowcast v1.1; v1 becomes a secondary arm
+(2026-11-17).** v1.1 is v1's configuration fitted only on windows selected by the
+forecast. Frozen model sha256
+`d7c816dce2915a83126572ae2ce4a2822918c1daeaf36405ad56f9c574080c64`. The amendment
+was made before any P4S-paper sample market opened. Full entry private (sha256
+`0980fbe77a849c6bdc1cc4af9285c8fb07b523e0a0a315d074354c40029fb2d6`).
+
+**D-053. Repository split into a public research repo and a private edge repo
+(2026-11-17, owner decision).** The repository is public and people are finding
+it, so the parts that would reveal where a trading edge might be move to a private
+repository: the snow nowcast (code, features, findings), the P4E and P4S scoring
+and execution rules, the full Phase 4 preregistration texts, and decision entries
+D-045 and D-048 to D-052. They are committed here by sha256 (`docs/commitments.md`)
+and revealed after each evaluation. Everything else stays public: logging,
+settlement replication, data pipelines, the composite and ERCOT models, P2A, P2B,
+P3A and their results. The private package plugs in through Python entry points
+(`pmw.plugins`); this package never imports it. Live trading, when approved, is
+deployed from the private repository only; the logger services stay on this one.
+Published history was not rewritten: a secrets scan of all 71 commits (gitleaks
+and a check of every value in `.env` and `keys.txt`) found nothing, and the
+commits that held the private material had never been pushed.

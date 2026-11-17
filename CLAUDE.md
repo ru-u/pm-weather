@@ -57,6 +57,8 @@ make report         # daily logger report (yesterday UTC)
 make settle-check SERIES=all        # or one series, e.g. KXNYCSNOWM
 make nbm nbs climo  # pull and parse NBM bulletins and station climatology (resumable)
 make p2a            # experiment P2A: observed table, forecasts (no prices), scoring
+uv run pmw plugins                  # strategies and models available, params in use
+uv run pmw backtest OBS.parquet     # paper taker backtest (naive baseline unless a plugin is named)
 make pull-data      # copy the Railway bucket to ./data/bucket (PREFIX=raw/ercot for part)
 uv run pmw ercot-build              # ERCOT tables from the pulled archive
 uv run pmw ercot-settle-check       # replicate every settled KXTXERCOTPEAKD market
@@ -70,23 +72,41 @@ cfgrib), `energy` (gridstatus). `uv sync --all-extras` installs everything.
 ## Layout
 
 ```
-configs/      series.yaml (discovery filters), stations.yaml, logger.yaml
-docs/         decisions, preregistration, settlement_rules, data_sources, deploy, findings/
+configs/      series.yaml (discovery filters), stations.yaml, logger.yaml, params.example.yaml
+docs/         decisions, preregistration, commitments, settlement_rules, data_sources, deploy, findings/
 src/pmw/
   markets/    kalshi.py (public client), fees.py
-  weather/    iem_cli.py (NWS CLI via IEM), acis.py (second source), nbm_text.py (NBM bulletins)
-  energy/     ercot.py (API client, parsers), jobs.py (Railway probe/backfill), build.py
+  weather/    iem_cli.py, cli_text.py (NWS CLI), acis.py, asos.py, nbm_text.py, hrrr_zarr.py
+  energy/     ercot.py (API client, parsers), jobs.py (Railway probe/backfill), live.py, build.py
   logger/     discovery, schemas, buffer, runner, report
   settle/     snow.py (SNOWOVERTIME), ercot.py (KXTXERCOTPEAKD)
-  features/   nbm_table.py (parsed NBM forecast periods)
-  models/     nbm_composite.py (observed + NBM + climatology, Monte Carlo)
-  eval/       p2a.py, p2a_score.py (P2A); p3a.py, p3a_score.py (P3A, ERCOT)
-  backtest/   (later phase, empty)
+  features/   nbm_table.py, obs_table.py, ercot_weather.py
+  models/     nbm_composite.py (observed + NBM + climatology), ercot_peak.py, ercot_peak_v2.py
+  eval/       p2a.py, p2a_score.py, p2b.py, p3a.py, p3a_score.py
+  plugins.py  Strategy / ProbabilityModel protocols, entry-point discovery, params
+  strategy.py NaiveTaker (the registered P2A/P3A baseline)
+  backtest/   taker.py (fee-aware book walk, run, settle; paper only)
   utils/      timeutil, storage, config
-scripts/      pull_data.py, views.sql (DuckDB view layer)
+scripts/      pull_data.py, prereg_design.py, views.sql (DuckDB view layer)
 tests/        offline; fixtures are real saved responses
 data/         gitignored: raw/ interim/ processed/ live/
 ```
+
+## Public and private code (D-053)
+
+This repository is public. The tuned models, execution rules and Phase 4
+preregistration texts live in a separate private package that depends on this
+one and plugs in through the `pmw.strategies` / `pmw.models` entry points.
+
+- Never import the private package here, and never copy its code, params,
+  thresholds or results into this repo (docs, commit messages, tests included).
+- New modelling or execution work that could reveal where an edge is goes in
+  the private package. Data collection, settlement, generic features, baselines
+  and methodology stay here.
+- Private texts are committed here by sha256 in `docs/commitments.md` and
+  revealed after their evaluation.
+- Do not push tags or branches other than `main` without checking what they
+  contain.
 
 ## Facts that are easy to get wrong
 
@@ -170,33 +190,22 @@ data/         gitignored: raw/ interim/ processed/ live/
 ## Phases and gates
 
 0. Scaffold and environment. Done 2026-11-14.
-1. Live logger. Kalshi book, market and trade logging is deployed on Railway
-   and running since 2026-11-14 16:12 UTC. NBM forecast snapshots, ERCOT
-   forecast snapshots and Polymarket (read-only) logging still to do.
-2. Historical snow go/no-go: DONE 2026-11-15, CONDITIONAL. The market was more
-   accurate than the NBM composite (D = -0.010, CI excludes 0); taker P&L noise.
-   Snow modeling only if P2B finds a specific NBM weakness. Storm windows are
-   tested prospectively on live-logged data (P2A-S). Do not re-run or retune P2A:
-   it is done; anything further is a new, separately registered experiment.
-3. ERCOT go/no-go (needs volume of about $20k/day on stressed days as well).
-   DONE 2026-11-16, CONDITIONAL (P3A, D-038). The market was more accurate than
-   ERCOT's own load forecast (D = -0.011, CI excludes 0); taker P&L positive but
-   on 54 trades with negative perceived/realized correlation; summer capacity is
-   fine. Settlement replication 1,334/1,334. Do not re-run or retune P3A. A
-   prospective test on live books through summer 2027 (P3A-S) is still to be
-   registered.
-4. Modeling. OPEN for ERCOT and snow by owner decision (D-040, 2026-11-16),
-   overriding the "documented forecast weakness" clause in 2 and 3. The rest
-   of the discipline stands: train / validate / held-out, choose on
-   validation only, pre-register, score once. ERCOT nowcast v1 done (D-041);
-   v2 and the market test P4E next. The Kalshi period (2026-08-28 on) is not
-   used for any model choice. Kalshi liquidity incentives come and go per
-   series: see D-042.
+1. Live logger. Kalshi book, market and trade logging on Railway since
+   2026-11-14 16:12 UTC; `ercot-live` cron (D-046) since 2026-11-17.
+2. Historical snow go/no-go: DONE 2026-11-15, CONDITIONAL (P2A). The market was
+   more accurate than the NBM composite (D = -0.010, CI excludes 0). P2B DONE
+   2026-11-17 (D-047): no documented NBM weakness. Do not re-run or retune P2A.
+3. ERCOT go/no-go: DONE 2026-11-16, CONDITIONAL (P3A, D-038). The market was more
+   accurate than ERCOT's own load forecast (D = -0.011, CI excludes 0).
+   Settlement replication 1,334/1,334. Do not re-run or retune P3A.
+4. Modelling: open by owner decision (D-040). Train / validate / held-out, choose
+   on validation only, pre-register, score once. Frozen experiments and their
+   evaluation dates are in `docs/preregistration.md` and `docs/commitments.md`;
+   the work itself is private (D-053).
 5. Paper trading, then tiny live with hard caps and a kill switch, only on
-   written approval.
+   written approval. Live trading is deployed from the private repo only.
 
 Snow and ERCOT are separate strategies with shared plumbing. No cross-hedging.
-One combined risk layer caps total cold-weather exposure across both.
 
 ## Hosting
 
