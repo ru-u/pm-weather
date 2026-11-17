@@ -461,3 +461,18 @@ market opened. Tested on synthetic books (GO and NO GO known answers; same D as
 P2A when the books match the candles) and run end to end with `--dev` on
 KXSNOWCITIES-26NOV15, which is outside the sample: 100 forecast rows, no leakage,
 30 with a logged book, none two-sided.
+
+**D-055. ERCOT paper trading starts now, during the P4-paper sample (2026-11-17,
+owner decision).** The owner wants trading experience well before P4-paper is
+scored in October 2027, starting with live paper trading of the frozen ERCOT
+nowcast (D-044) and P4E's taker rule. The paper trader decides at each registered
+decision time from inputs public at that moment and fills against the live book;
+no order is sent. Its daily P&L is visible, which breaks P4-paper's rule that only
+data-health counts are looked at before the evaluation. To keep P4-paper honest:
+(1) the frozen model and the trading rule stay unchanged; (2) if either is changed
+for any reason, P4-paper's sample ends on the last operating day before the change
+and is scored on those days only, on the original date; (3) the paper trader's
+results are reported separately and never substitute for P4-paper's. P4-paper
+itself is still scored from logged books and inputs rebuilt from the archives,
+exactly as registered. A tiny live pilot will need its own registered rules and
+the owner's written approval in this file.

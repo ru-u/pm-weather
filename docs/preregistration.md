@@ -490,6 +490,12 @@ to 2027-04-30, on books logged every 5 minutes. Evaluated once, on or after
 
 ## Deviations
 
+- **P4-paper, 2026-11-17, before its first sample day: interim results become
+  visible** (D-055). Live paper trading of the same frozen model and rule starts
+  with the sample, so P4-paper's paper P&L is seen as it accrues, against the
+  registered "data-health counts only". The model and rule stay frozen; any change
+  to either ends P4-paper's sample on the last day before it. Reason: owner
+  decision to gain trading experience before the evaluation.
 - **P4S-paper, 2026-11-17, before any sample market opened: primary model changed
   from v1 to v1.1** (a training-window selection problem found after P4S-T, D-051,
   D-052). v1 kept as a secondary arm. The amendment is part of the committed
