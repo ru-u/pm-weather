@@ -213,7 +213,8 @@ Snow and ERCOT are separate strategies with shared plumbing. No cross-hedging.
 
 Railway, Hobby plan, project `pm-weather`, US East: service `logger` (always
 on), cron service `daily-report`, one-shot service `ercot-jobs` (the only one
-holding ERCOT credentials), bucket `pmw-data`. The $5 monthly credit is
+holding ERCOT credentials), cron `paper-ercot` (ERCOT paper trading, deployed
+from the private repo, D-055), bucket `pmw-data`. The $5 monthly credit is
 shared with the owner's other projects (named in `CLAUDE.local.md`): never
 touch those, and keep this project lean. Total account overage is acceptable up to
 about $10 a month. Deploy with `railway up --service logger` from this folder;
