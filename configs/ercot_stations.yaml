@@ -1,0 +1,36 @@
+# Weather stations for the ERCOT peak model (Phase 4, v2). Kept apart from
+# stations.yaml, which lists snow settlement stations only.
+#
+# Each station stands for one ERCOT forecast zone of the NP6-346-CD report.
+# The zone weights are NOT fixed here: the feature builder takes each zone's
+# share of load over a trailing window that ends before the operating day,
+# because the West share grew from 10% (2018) to 17% (2025). Where a zone has
+# two stations, they are averaged first.
+#
+# `asos` is the IEM ASOS identifier (ICAO without the leading K).
+stations:
+  KIAH:
+    name: Houston Intercontinental
+    zone: houston
+    asos: IAH
+    tz: America/Chicago
+  KDFW:
+    name: Dallas-Fort Worth International
+    zone: north
+    asos: DFW
+    tz: America/Chicago
+  KAUS:
+    name: Austin-Bergstrom
+    zone: south
+    asos: AUS
+    tz: America/Chicago
+  KSAT:
+    name: San Antonio International
+    zone: south
+    asos: SAT
+    tz: America/Chicago
+  KMAF:
+    name: Midland International
+    zone: west
+    asos: MAF
+    tz: America/Chicago

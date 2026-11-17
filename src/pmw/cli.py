@@ -340,6 +340,38 @@ def ercot_model(
     typer.echo(json.dumps(report, indent=1, default=str))
 
 
+@app.command("ercot-model-v2")
+def ercot_model_v2(
+    interim: str = typer.Option("data/interim/ercot"),
+    rebuild_weather: bool = typer.Option(False, help="Rebuild the weather features"),
+) -> None:
+    """Phase 4 v2: weather features, more model families, log-odds blend (validation only)."""
+    import pickle
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw.models import ercot_peak as ep
+    from pmw.models import ercot_peak_v2 as v2
+
+    _setup_logging()
+    root = Path(interim)
+    t = ep.Tables.load(root)
+    ds = pd.read_parquet(root / "peak_dataset.parquet")
+    ds["oper_day"] = pd.to_datetime(ds["oper_day"]).dt.date
+    cache = root / "peak_weather.parquet"
+    if rebuild_weather or not cache.exists():
+        wx = v2.build_weather(ds, t.hourly, Path("data/raw/nbm_ercot"), Path("data/raw/asos"))
+        wx.to_parquet(cache)
+    wx = pd.read_parquet(cache)
+    wx["oper_day"] = pd.to_datetime(wx["oper_day"]).dt.date
+    report, fitted = v2.run(ds, wx, t, log=typer.echo)
+    (root / "peak_model_v2_report.json").write_text(json.dumps(report, indent=1, default=str))
+    with open(root / "peak_model_v2_fitted.pkl", "wb") as f:
+        pickle.dump(fitted, f)
+    typer.echo(json.dumps(report, indent=1, default=str))
+
+
 @app.command("ercot-settle-check")
 def ercot_settle_check(
     peaks: str = typer.Option("data/interim/ercot/daily_peak.parquet"),
@@ -405,27 +437,50 @@ def nbm_pull(
     end: str = typer.Argument(..., help="Last UTC date, YYYY-MM-DD"),
     product: str = typer.Option("nbp", help="nbp (probabilistic) or nbs (short range)"),
     hours: str = typer.Option(
-        "1,7,13,19", help="Cycle hours (UTC). Only 01/07/13/19Z carry the 24-hour percentiles."
+        "1,7,13,19",
+        help="Cycle hours (UTC), or 'ercot-decisions' for the NBH cycle 2 h before each "
+        "ERCOT decision time of that operating day. Only 01/07/13/19Z carry NBP 24-hour "
+        "percentiles.",
     ),
     out: str = typer.Option("data/raw/nbm", help="Output root"),
+    station_set: str = typer.Option(
+        "snow", "--station-set", help="snow (configs/stations.yaml) or ercot (ercot_stations.yaml)"
+    ),
 ) -> None:
     """Download archived NBM text blocks for the configured stations (resumable per day)."""
     from datetime import date as _date
     from pathlib import Path
 
-    from pmw.utils.config import load_stations_config
+    from pmw.utils.config import load_ercot_stations_config, load_stations_config
     from pmw.utils.timeutil import date_range
     from pmw.weather.nbm_text import NbmTextArchive, pull_day
 
     _setup_logging()
-    stations = sorted(load_stations_config().stations)
-    hour_list = [int(h) for h in hours.split(",")]
+    if station_set == "snow":
+        stations = sorted(load_stations_config().stations)
+    elif station_set == "ercot":
+        stations = sorted(load_ercot_stations_config().stations)
+        if out == "data/raw/nbm":
+            out = "data/raw/nbm_ercot"  # never mix with the snow pull's day files
+    else:
+        raise typer.BadParameter("--station-set must be snow or ercot")
+    if hours == "ercot-decisions":
+        from pmw.features.ercot_weather import nbh_cycle_hours_for_day
+
+        def hours_for(day: _date) -> list[int]:
+            return nbh_cycle_hours_for_day(day)
+    else:
+        fixed = [int(h) for h in hours.split(",")]
+
+        def hours_for(day: _date) -> list[int]:
+            return fixed
+
     archive = NbmTextArchive(product)
     root = Path(out)
     total = missing = 0
     days = date_range(_date.fromisoformat(start), _date.fromisoformat(end))
     for done, day in enumerate(days, 1):
-        b, m = pull_day(archive, root, day, stations, hour_list)
+        b, m = pull_day(archive, root, day, stations, hours_for(day))
         total += b
         missing += m
         if done % 10 == 0 or done == len(days):
@@ -434,6 +489,32 @@ def nbm_pull(
                 f"range_requests={archive.range_requests} full_downloads={archive.full_downloads}"
             )
     archive.close()
+
+
+@app.command("asos-pull")
+def asos_pull(
+    first_year: int = typer.Argument(2020, help="First year"),
+    last_year: int = typer.Argument(..., help="Last year (the current year is refreshed)"),
+    out: str = typer.Option("data/raw/asos", help="Output root"),
+) -> None:
+    """Hourly ASOS temperatures (IEM) for the ERCOT stations, one request per station-year."""
+    import time as _time
+    from pathlib import Path
+
+    import httpx
+
+    from pmw.utils.config import load_ercot_stations_config
+    from pmw.weather.asos import pull_year
+
+    _setup_logging()
+    stations = [s.asos for s in load_ercot_stations_config().stations.values()]
+    with httpx.Client(timeout=300, headers={"User-Agent": "pmw-research/0.1"}) as client:
+        for st in stations:
+            for year in range(first_year, last_year + 1):
+                path = pull_year(client, Path(out), st, year)
+                typer.echo(f"{st} {year} {'saved ' + str(path) if path else 'already saved'}")
+                if path:
+                    _time.sleep(2.0)  # sequential and paced, as IEM asks
 
 
 @app.command("nbm-parse")

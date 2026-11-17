@@ -38,7 +38,7 @@ import httpx
 log = logging.getLogger(__name__)
 
 BUCKET_URL = "https://noaa-nbm-grib2-pds.s3.amazonaws.com"
-PRODUCTS = {"nbp": "blend_nbptx", "nbs": "blend_nbstx"}
+PRODUCTS = {"nbp": "blend_nbptx", "nbs": "blend_nbstx", "nbh": "blend_nbhtx"}
 RANGE_BYTES = 4500  # larger than any CONUS station block seen (2997 to 3807 bytes)
 _HEADER_RE = re.compile(
     r"^ ?(?P<station>[A-Z0-9]{3,8}) +NBM (?P<version>V[\d.]+) (?P<product>NB[A-Z]) GUIDANCE +"
@@ -99,6 +99,16 @@ def _num(text: str) -> int | None:
         return None
     value = int(text)
     return None if value < 0 else value  # negative codes mean missing
+
+
+def _signed(text: str) -> int | None:
+    """Like `_num` but keeps negative values (temperatures). Codes of -80 and below
+    (e.g. -88, -99) are the text card's missing or special values."""
+    text = text.strip()
+    if not text or not re.fullmatch(r"-?\d+", text):
+        return None
+    value = int(text)
+    return None if value <= -80 else value
 
 
 def parse_header(line: str) -> tuple[str, str, str, datetime]:
@@ -200,6 +210,52 @@ def parse_nbs_block(text: str) -> NbsBlock:
     return NbsBlock(station=station, version=version, issue=issue, s06_in=s06)
 
 
+NBH_ELEMENTS = ("TMP", "TSD", "DPT")  # deg F; TSD (temperature spread) from V4.x on
+# NBH labels are 4 characters plus a space; the first 3-character field starts at column 5.
+NBH_LABEL_WIDTH = 5
+
+
+@dataclass(frozen=True)
+class NbhBlock:
+    """Hourly (NBH) block: 25 hourly columns, valid at issue + 1 h to issue + 25 h."""
+
+    station: str
+    version: str
+    issue: datetime
+    values: dict[str, dict[datetime, float | None]]  # element -> valid time (UTC) -> value
+
+
+def parse_nbh_block(text: str, elements: tuple[str, ...] = NBH_ELEMENTS) -> NbhBlock:
+    """Parse one NBH block. Each value is a 3-character field right-aligned under its
+    UTC hour column (values can touch, e.g. "-10" or "103"), so slice by position.
+    Column k (1-based) is valid at issue + k hours; the UTC row is checked against that."""
+    lines = [ln.rstrip("\n") for ln in text.split("\n") if ln.strip()]
+    station, version, product, issue = parse_header(lines[0])
+    if product != "NBH":
+        raise ValueError(f"expected an NBH block, got {product}")
+    utc_line = next((ln for ln in lines if ln[:NBH_LABEL_WIDTH].strip() == "UTC"), None)
+    if utc_line is None:
+        raise ValueError(f"no UTC line in block for {station}")
+    columns = [(m.end(), int(m.group())) for m in re.finditer(r"\d+", utc_line[NBH_LABEL_WIDTH:])]
+    valid: list[tuple[int, datetime]] = []
+    for k, (end, hour) in enumerate(columns, 1):
+        t = issue + timedelta(hours=k)
+        if t.hour != hour:
+            raise ValueError(f"{station} {issue}: column {k} is {hour}Z, expected {t.hour}Z")
+        valid.append((end + NBH_LABEL_WIDTH, t))
+    out: dict[str, dict[datetime, float | None]] = {}
+    for label in elements:
+        line = next((ln for ln in lines if ln[:NBH_LABEL_WIDTH].strip() == label), None)
+        if line is None:
+            continue  # e.g. TSD before V4.0
+        row: dict[datetime, float | None] = {}
+        for end, t in valid:
+            n = _signed(line[end - 3 : end])
+            row[t] = None if n is None else float(n)
+        out[label] = row
+    return NbhBlock(station=station, version=version, issue=issue, values=out)
+
+
 def split_blocks(data: bytes) -> dict[str, tuple[int, int]]:
     """Station -> (offset, length) for every block in a full bulletin file."""
     heads = [(m.start(), m.group(1).decode()) for m in _ANY_HEADER_RE.finditer(data)]
@@ -238,9 +294,9 @@ class NbmTextArchive:
             raise ValueError(f"unknown product {product}")
         self.product = product
         self.workers = workers
-        # NBP offsets are fixed; NBS offsets drift, so search a window around them.
+        # NBP and NBH offsets are fixed; NBS offsets drift, so search a window around them.
         self.search_bytes = (
-            (0 if product == "nbp" else 24_000) if search_bytes is None else search_bytes
+            (24_000 if product == "nbs" else 0) if search_bytes is None else search_bytes
         )
         self._client = httpx.Client(
             timeout=timeout_s,
@@ -325,7 +381,9 @@ class NbmTextArchive:
 
     def fetch_cycle(self, cycle: datetime, stations: list[str]) -> list[FetchedBlock]:
         url = bulletin_url(self.product, cycle)
-        hour = cycle.hour
+        # NBH lists stations at the same offsets at every cycle hour (checked on
+        # 2024-2026 files), so one set of offsets serves all hours.
+        hour = 0 if self.product == "nbh" else cycle.hour
         known = [s for s in stations if (hour, s) in self.offsets]
         results: dict[str, FetchedBlock] = {}
         moved = len(known) < len(stations)

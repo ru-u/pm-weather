@@ -219,3 +219,54 @@ def test_window_search_tracks_drifting_offsets():
     assert fake.requests == ["range", "range"]  # found inside the window, no full download
     assert [b.text for b in second] == [b.text for b in first]
     assert arc.offsets[(1, "KBOS")][0] == 160  # the drift is remembered
+
+
+# ---------- NBH (hourly) ----------
+
+
+def test_parse_nbh_hourly_temperature_and_spread():
+    from pmw.weather.nbm_text import parse_nbh_block
+
+    b = parse_nbh_block(_text("nbh_KIAH_2026070112.txt"))
+    assert (b.station, b.version) == ("KIAH", "V5.0")
+    assert b.issue == datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    tmp = b.values["TMP"]
+    # Columns run issue + 1 h to issue + 25 h.
+    assert min(tmp) == datetime(2026, 7, 1, 13, tzinfo=UTC)
+    assert max(tmp) == datetime(2026, 7, 2, 13, tzinfo=UTC)
+    assert len(tmp) == 25
+    # " TMP  81 84 86 88 91 92 93 94 94 ..." and " TSD   1  1  1  1  2  2  2  3  3 ..."
+    assert [tmp[datetime(2026, 7, 1, h, tzinfo=UTC)] for h in (13, 14, 20, 21)] == [81, 84, 94, 94]
+    assert b.values["TSD"][datetime(2026, 7, 1, 20, tzinfo=UTC)] == 3
+    assert b.values["DPT"][datetime(2026, 7, 2, 13, tzinfo=UTC)] == 76
+
+
+def test_parse_nbh_old_version_without_spread():
+    from pmw.weather.nbm_text import parse_nbh_block
+
+    b = parse_nbh_block(_text("nbh_KDFW_2020060112.txt"))
+    assert (b.station, b.version) == ("KDFW", "V3.2")
+    assert "TSD" not in b.values
+    assert b.values["TMP"][datetime(2020, 6, 1, 20, tzinfo=UTC)] == 86
+    assert b.values["TMP"][datetime(2020, 6, 2, 13, tzinfo=UTC)] == 73
+
+
+def test_parse_nbh_negative_and_three_digit_fields():
+    from pmw.weather.nbm_text import parse_nbh_block
+
+    text = _text("nbh_KDFW_2020060112.txt")
+    lines = text.split("\n")
+    i = next(k for k, ln in enumerate(lines) if ln.startswith(" TMP"))
+    # Fields are 3 characters wide and can touch: "-10" and "103" fill them.
+    lines[i] = " TMP -10 -5  0" + "103" * 22
+    b = parse_nbh_block("\n".join(lines))
+    tmp = b.values["TMP"]
+    assert [tmp[datetime(2020, 6, 1, h, tzinfo=UTC)] for h in (13, 14, 15, 16)] == [-10, -5, 0, 103]
+
+
+def test_parse_nbh_rejects_misaligned_hours():
+    from pmw.weather.nbm_text import parse_nbh_block
+
+    text = _text("nbh_KDFW_2020060112.txt").replace(" UTC  13 14", " UTC  14 15", 1)
+    with pytest.raises(ValueError):
+        parse_nbh_block(text)

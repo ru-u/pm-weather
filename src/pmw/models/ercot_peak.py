@@ -251,6 +251,9 @@ class NGBoostNormal:
 
     name = "ngboost"
 
+    def __init__(self, features: list[str] | None = None) -> None:
+        self.features = list(features or FEATURES)
+
     def fit(self, train: pd.DataFrame, calib: pd.DataFrame) -> NGBoostNormal:
         from ngboost import NGBRegressor  # type: ignore[import-untyped]
         from ngboost.distns import Normal  # type: ignore[import-untyped]
@@ -258,14 +261,14 @@ class NGBoostNormal:
         self.m = NGBRegressor(
             Dist=Normal, n_estimators=600, learning_rate=0.03, verbose=False, random_state=7
         )
-        self.m.fit(train[FEATURES].to_numpy(float), train["y"].to_numpy(float))
+        self.m.fit(train[self.features].to_numpy(float), train["y"].to_numpy(float))
         mu, sd = self._raw(calib)
         z = (calib["y"].to_numpy(float) - mu) / sd
         self.scale = float(np.sqrt(np.mean(z**2)))  # sigma calibration on held-out calib year
         return self
 
     def _raw(self, rows: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-        dist = self.m.pred_dist(rows[FEATURES].to_numpy(float))
+        dist = self.m.pred_dist(rows[self.features].to_numpy(float))
         return np.asarray(dist.params["loc"]), np.asarray(dist.params["scale"])
 
     def prob_R_above(self, rows: pd.DataFrame, strikes: np.ndarray) -> np.ndarray:
@@ -281,10 +284,13 @@ class LGBMConformal:
 
     name = "lgbm_cqr"
 
+    def __init__(self, features: list[str] | None = None) -> None:
+        self.features = list(features or FEATURES)
+
     def fit(self, train: pd.DataFrame, calib: pd.DataFrame) -> LGBMConformal:
         import lightgbm as lgb
 
-        X, y = train[FEATURES].to_numpy(float), train["y"].to_numpy(float)
+        X, y = train[self.features].to_numpy(float), train["y"].to_numpy(float)
         self.models = {}
         for q in QUANTILES:
             m = lgb.LGBMRegressor(
@@ -302,7 +308,7 @@ class LGBMConformal:
         return self
 
     def _raw(self, rows: pd.DataFrame) -> np.ndarray:
-        X = rows[FEATURES].to_numpy(float)
+        X = rows[self.features].to_numpy(float)
         return np.column_stack([self.models[q].predict(X) for q in QUANTILES])
 
     def quantiles(self, rows: pd.DataFrame) -> np.ndarray:

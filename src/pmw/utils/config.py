@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -158,3 +158,21 @@ def load_logger_config() -> LoggerConfig:
 
 def load_stations_config() -> StationsConfig:
     return StationsConfig.model_validate(_load("stations.yaml"))
+
+
+# ---------- ercot_stations.yaml ----------
+
+
+class ErcotStation(BaseModel):
+    name: str
+    zone: Literal["north", "south", "west", "houston"]
+    asos: str
+    tz: str
+
+
+class ErcotStationsConfig(BaseModel):
+    stations: dict[str, ErcotStation]
+
+
+def load_ercot_stations_config() -> ErcotStationsConfig:
+    return ErcotStationsConfig.model_validate(_load("ercot_stations.yaml"))
