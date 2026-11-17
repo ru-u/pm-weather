@@ -476,3 +476,19 @@ results are reported separately and never substitute for P4-paper's. P4-paper
 itself is still scored from logged books and inputs rebuilt from the archives,
 exactly as registered. A tiny live pilot will need its own registered rules and
 the owner's written approval in this file.
+
+**D-056. Trading service for Kalshi's demo exchange (2026-11-17).** The
+authenticated trading service is built in the private repository (D-053), apart
+from every logger (hard rule 2). It signs requests with the owner's key type
+(Ed25519), places immediate-or-cancel limit orders, enforces contract and dollar
+caps rebuilt from the exchange's own positions, and has a kill switch that
+cancels every resting order. An order whose outcome is unknown (a timeout or a
+server error) trips the kill switch by itself. It talks to the demo exchange
+unless it is given a live-approval decision from this file, which does not exist
+yet. Kalshi's current docs differ from what this project assumed (rule 10):
+order writes moved to the V2 endpoint `/portfolio/events/orders` and the old one
+returns 410; V2 orders quote only the YES leg; and the docs do not say whether a
+fill's `fee_cost` includes the rounding fee. The first demo fills are
+reconciled against `pmw.markets.fees` (trade fee and trade-plus-rounding fee
+both compared) before any paper P&L is trusted to the cent. Demo credentials are
+separate from production ones and live only in the private repository's `.env`.

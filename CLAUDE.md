@@ -128,6 +128,13 @@ one and plugs in through the `pmw.strategies` / `pmw.models` entry points.
   `/historical/*` endpoints. Use `KalshiPublic.settled_markets()`.
 - ERCOT demand is under category Economics and power prices under Commodities,
   not under Climate and Weather.
+- Orders (checked 2026-11-17, D-056): writes go to V2 `/portfolio/events/orders`;
+  the legacy `/portfolio/orders` writes return 410. V2 quotes the YES leg only:
+  `side` bid = buy YES, ask = sell YES (= buy NO at 1 - price); `price` and
+  `count` are strings. Fills report `outcome_side` and `fee_cost` (dollars).
+  Valid prices come from each market's `price_ranges`.
+- Demo exchange: `https://external-api.demo.kalshi.co/trade-api/v2`. Demo and
+  production keys each work only on their own exchange.
 
 **Fees**
 - Taker fee = 0.07 x multiplier x contracts x P x (1 - P), rounded up to
