@@ -126,3 +126,37 @@ def test_probabilistic_models_are_calibrated_out_of_sample(model):
     if isinstance(m, ep.LGBMConformal):
         cov = ep.interval_coverage(m, test)
         assert abs(cov["80%"] - 0.80) < 0.05 and abs(cov["95%"] - 0.95) < 0.03
+
+
+def _points(t: ep.Tables, delay_min: float) -> pd.DataFrame:
+    p = t.tel_5min.copy()
+    local = p["ts_utc"].dt.tz_convert(ep.CT)
+    p["hour_ending"] = local.dt.hour + 1
+    p["repeated"] = False
+    p["first_seen_utc"] = p["ts_utc"] + pd.Timedelta(minutes=delay_min)
+    return p
+
+
+def test_live_intraday_uses_only_points_seen_before_the_decision():
+    days = [date(2024, 7, 1) + timedelta(days=i) for i in range(5)]
+    t = _tables(days)
+    rows = ep.build_dataset(t, days[0], days[-1])
+    # Points visible as soon as they exist: the 5-minute values (the world's hourly
+    # telemetry table carries a +0.2% offset the points do not).
+    now = ep.with_live_intraday(rows, t, _points(t, 0.0))
+    r = now[(now["oper_day"] == days[2]) & (now["hour"] == 14)].iloc[0]
+    level = 50000 + 1000 * 2
+    curve = lambda he: level * (0.8 + 0.2 * math.exp(-((he - 17) ** 2) / 18))  # noqa: E731
+    assert r["H_tel"] == pytest.approx(curve(14))
+    assert r["live_lag_min"] == pytest.approx(5.0)
+    keep = [c for c in rows.columns if c not in ep.INTRADAY_COLUMNS]
+    pd.testing.assert_frame_equal(now[keep], rows[keep])  # nothing else changes
+    # Seen 30 minutes late: HE 14 has 6 of 12 points; the latest visible point is 13:25.
+    late = ep.with_live_intraday(rows, t, _points(t, 30.0))
+    r = late[(late["oper_day"] == days[2]) & (late["hour"] == 14)].iloc[0]
+    assert r["H_tel"] == pytest.approx(curve(14))  # flat within the hour in this world
+    assert r["live_lag_min"] == pytest.approx(35.0)
+    assert r["live_points"] == 13 * 12 + 6
+    # Nothing seen: no load so far.
+    none = ep.with_live_intraday(rows, t, _points(t, 0.0).iloc[:0])
+    assert none["H_tel"].isna().all() and none["cur_over_Frem"].isna().all()

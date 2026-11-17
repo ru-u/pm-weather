@@ -66,6 +66,41 @@ def dashboard_last_updated(payload: dict[str, Any]) -> datetime:
     return datetime.strptime(payload["lastUpdated"], "%Y-%m-%d %H:%M:%S%z").astimezone(UTC)
 
 
+def dashboard_points(snapshots: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Observed 5-minute points from saved snapshots, each with when we first saw it.
+
+    `snapshots` are the saved wrappers ({"fetched_utc", "payload"}). Projected
+    points are dropped. A point seen in several snapshots keeps the value and the
+    fetch time of the earliest one, so a consumer can ask what was visible at t
+    (`first_seen_utc < t`). Operating day and hour ending follow NP3-910-ER: local
+    Central date, local hour + 1, and the second pass through the fall-back hour
+    is `repeated`.
+    """
+    from zoneinfo import ZoneInfo
+
+    central = ZoneInfo("America/Chicago")
+    seen: dict[datetime, dict[str, Any]] = {}
+    for snap in sorted(snapshots, key=lambda s: s["fetched_utc"]):
+        fetched = datetime.fromisoformat(snap["fetched_utc"]).astimezone(UTC)
+        for p in parse_dashboard(snap["payload"]):
+            if p.projected or p.ts in seen:
+                continue
+            local = p.ts.astimezone(central)
+            seen[p.ts] = {
+                "ts_utc": p.ts, "oper_day": local.date(), "hour_ending": local.hour + 1,
+                "repeated": bool(local.fold), "system": p.demand_mw, "first_seen_utc": fetched,
+            }  # fmt: skip
+    return [seen[k] for k in sorted(seen)]
+
+
+def load_dashboard_snapshots(paths: list[Any]) -> list[dict[str, Any]]:
+    out = []
+    for path in paths:
+        with gzip.open(path, "rt") as f:
+            out.append(json.load(f))
+    return out
+
+
 def dashboard_path(fetched: datetime) -> str:
     return f"{LIVE_ROOT}/dashboard/{fetched:%Y/%m/%d}/{fetched:%H%M%S}Z.json.gz"
 

@@ -81,6 +81,52 @@ def _holidays(start: date, end: date) -> set[date]:
     return {d.date() for d in USFederalHolidayCalendar().holidays(start, end)}
 
 
+INTRADAY_COLUMNS = (
+    "H_tel", "H_tel_over_Frem", "obs_vs_fc", "last_ratio", "cur_over_Frem", "ramp_rel",
+)  # fmt: skip
+
+
+def intraday_features(
+    th: pd.DataFrame | None,
+    tel5: pd.Series,
+    fc: pd.DataFrame,
+    h: int,
+    tdec: datetime,
+    F_rem: float,
+) -> dict[str, float]:
+    """Load-so-far features at decision time `tdec` (hour h of the operating day).
+
+    `th`: hourly telemetry of the day (hour_ending, repeated, mean_load, n), or None;
+    `tel5`: 5-minute system load indexed by UTC time; `fc`: the in-use posting's
+    hourly forecast for the day. Hours with fewer than MIN_POINTS_PER_HOUR points
+    are ignored; nothing at or after `tdec` is read.
+    """
+    done = (
+        th[(th["hour_ending"] <= h) & (th["n"] >= MIN_POINTS_PER_HOUR)]
+        if th is not None and h > 0
+        else None
+    )
+    H_tel = float(done["mean_load"].max()) if done is not None and len(done) else math.nan
+    if done is not None and len(done):
+        m = done.merge(
+            fc[["hour_ending", "repeated", "system_total"]], on=["hour_ending", "repeated"]
+        )
+        obs_vs_fc = float((m["mean_load"] / m["system_total"]).mean()) if len(m) else math.nan
+        last_ratio = (
+            float(m.iloc[-1]["mean_load"] / m.iloc[-1]["system_total"]) if len(m) else math.nan
+        )
+    else:
+        obs_vs_fc = last_ratio = math.nan
+    w = tel5[(tel5.index < tdec) & (tel5.index >= tdec - timedelta(minutes=70))]
+    cur = float(w.iloc[-1]) if len(w) else math.nan
+    ramp = float(w.iloc[-1] - w.iloc[0]) if len(w) > 2 else math.nan
+    return {
+        "H_tel": H_tel, "H_tel_over_Frem": H_tel / F_rem,
+        "obs_vs_fc": obs_vs_fc, "last_ratio": last_ratio,
+        "cur_over_Frem": cur / F_rem, "ramp_rel": ramp / F_rem,
+    }  # fmt: skip
+
+
 def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
     """One row per (operating day, decision hour) with features and target."""
     settled = {
@@ -138,30 +184,7 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
             R = float(rem_set["total"].max())
             A = float(hours["total"].max())
             # Intraday, from telemetry of completed hours (live dashboard stand-in).
-            th = tel_h.get(d)
-            done = (
-                th[(th["hour_ending"] <= h) & (th["n"] >= MIN_POINTS_PER_HOUR)]
-                if th is not None and h > 0
-                else None
-            )
-            H_tel = float(done["mean_load"].max()) if done is not None and len(done) else math.nan
-            if done is not None and len(done):
-                m = done.merge(
-                    fc[["hour_ending", "repeated", "system_total"]], on=["hour_ending", "repeated"]
-                )
-                obs_vs_fc = (
-                    float((m["mean_load"] / m["system_total"]).mean()) if len(m) else math.nan
-                )
-                last_ratio = (
-                    float(m.iloc[-1]["mean_load"] / m.iloc[-1]["system_total"])
-                    if len(m)
-                    else math.nan
-                )
-            else:
-                obs_vs_fc = last_ratio = math.nan
-            w = tel5[(tel5.index < tdec) & (tel5.index >= tdec - timedelta(minutes=70))]
-            cur = float(w.iloc[-1]) if len(w) else math.nan
-            ramp = float(w.iloc[-1] - w.iloc[0]) if len(w) > 2 else math.nan
+            intra = intraday_features(tel_h.get(d), tel5, fc, h, tdec, F_rem)
             # Forecast shape and model spread.
             peak_he = int(fc.loc[fc["system_total"].idxmax(), "hour_ending"])
             mods = models_by_doc.get((post["doc_id"], d))
@@ -181,9 +204,7 @@ def build_dataset(t: Tables, start: date, end: date) -> pd.DataFrame:
                 {
                     "oper_day": d, "hour": h, "t": pd.Timestamp(tdec), "post_utc": post["post_utc"],
                     "F": F, "F_rem": F_rem, "R": R, "A": A, "y": math.log(R / F_rem),
-                    "H_tel": H_tel, "H_tel_over_Frem": H_tel / F_rem,
-                    "obs_vs_fc": obs_vs_fc, "last_ratio": last_ratio,
-                    "cur_over_Frem": cur / F_rem, "ramp_rel": ramp / F_rem,
+                    **intra,
                     "Frem_over_F": F_rem / F, "hours_left": 24 - h, "peak_he": peak_he,
                     "hours_to_fc_peak": peak_he - h,
                     "rev_rel": (F - prev) / F if not math.isnan(prev) else math.nan,
@@ -217,6 +238,49 @@ def split(ds: pd.DataFrame) -> dict[str, pd.DataFrame]:
         "calib": ds[(d > TRAIN_END) & (d <= CALIB_END)],
         "valid": ds[(d > CALIB_END) & (d <= VALID_END)],
     }
+
+
+def with_live_intraday(rows: pd.DataFrame, t: Tables, points: pd.DataFrame) -> pd.DataFrame:
+    """`build_dataset` rows with the load-so-far features recomputed from live points.
+
+    `points` (ts_utc, oper_day, hour_ending, repeated, system, first_seen_utc), e.g.
+    from `pmw.energy.live.dashboard_points`: only points first seen strictly before
+    each row's decision time are used. Everything else in the row is unchanged.
+    Adds `live_points` (visible points of the day) and `live_lag_min` (minutes from
+    the latest visible point to the decision time).
+    """
+    inuse = t.fc_peaks[t.fc_peaks["in_use"]]
+    doc_of = {(p, d): doc for p, d, doc in zip(inuse["post_utc"], inuse["delivery_day"],
+                                               inuse["doc_id"], strict=True)}  # fmt: skip
+    pts = points.copy()
+    pts["ts_utc"] = pd.to_datetime(pts["ts_utc"], utc=True)
+    pts["first_seen_utc"] = pd.to_datetime(pts["first_seen_utc"], utc=True)
+    out = rows.copy()
+    lag, n_day = [], []
+    for i, r in enumerate(rows.itertuples(index=False)):
+        tdec = pd.Timestamp(r.t)
+        vis = pts[pts["first_seen_utc"] < tdec]
+        tel5 = vis.set_index("ts_utc").sort_index()["system"]
+        day = vis[vis["oper_day"] == r.oper_day]
+        th = (
+            day.groupby(["hour_ending", "repeated"], as_index=False)["system"].agg(
+                mean_load="mean", n="size"
+            )
+            if len(day)
+            else None
+        )
+        doc = doc_of[(pd.Timestamp(r.post_utc), r.oper_day)]
+        fc = t.fc_hourly[
+            (t.fc_hourly["doc_id"] == doc) & (t.fc_hourly["delivery_day"] == r.oper_day)
+        ]
+        intra = intraday_features(th, tel5, fc, r.hour, tdec.to_pydatetime(), r.F_rem)
+        for k, v in intra.items():
+            out.iat[i, out.columns.get_loc(k)] = v
+        lag.append((tdec - vis["ts_utc"].max()).total_seconds() / 60 if len(vis) else math.nan)
+        n_day.append(len(day))
+    out["live_points"] = n_day
+    out["live_lag_min"] = lag
+    return out
 
 
 # ---------------------------------------------------------------------------

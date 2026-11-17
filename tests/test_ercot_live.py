@@ -2,7 +2,7 @@
 
 import gzip
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import httpx
@@ -131,3 +131,30 @@ def test_run_once_isolates_failures_and_skips_archives_without_credentials(tmp_p
     assert s["archives"] == {"skipped": "no ERCOT credentials on this service"}
     assert s["ok"] is False
     assert st.exists("live/ercot/runs/2026/11/17/043512Z.json")
+
+
+def test_dashboard_points_keep_first_sighting_and_np3_910_hours():
+    early = {"fetched_utc": "2026-11-17T04:35:12+00:00", "payload": _dash()}
+    later_payload = json.loads(json.dumps(_dash()))
+    later_payload["data"][0]["demand"] = 1.0  # a revised value seen later is ignored
+    later = {"fetched_utc": "2026-11-17T05:05:00+00:00", "payload": later_payload}
+    pts = live.dashboard_points([later, early])
+    assert len(pts) == 17  # projected points dropped
+    first = pts[0]
+    assert first["system"] == 47334 and first["first_seen_utc"] == datetime.fromisoformat(
+        early["fetched_utc"]
+    )
+    assert first["oper_day"] == date(2026, 11, 16) and first["hour_ending"] == 1
+    assert pts[-1]["hour_ending"] == 23 and not pts[-1]["repeated"]  # 22:30 CST
+
+
+def test_dashboard_points_mark_the_repeated_fall_back_hour():
+    def point(ts: str) -> dict:
+        return {"timestamp": ts, "demand": 40000, "forecast": 0}
+
+    snap = {"fetched_utc": "2026-11-01T08:00:00+00:00",
+            "payload": {"data": [point("2026-11-01 01:30:00-0500"),
+                                 point("2026-11-01 01:30:00-0600")]}}  # fmt: skip
+    a, b = live.dashboard_points([snap])
+    assert (a["hour_ending"], a["repeated"]) == (2, False)
+    assert (b["hour_ending"], b["repeated"]) == (2, True)
