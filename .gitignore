@@ -45,3 +45,6 @@ build/
 *.joblib
 params/
 pm-weather-edge/
+
+# Claude Code local settings
+.claude/settings.local.json
