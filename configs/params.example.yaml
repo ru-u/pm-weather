@@ -1,0 +1,17 @@
+# Example params file for `pmw backtest` and `pmw plugins`.
+# Use with `--params configs/params.example.yaml` or `PMW_PARAMS=...`.
+# Without a params file the same values apply (each class's own defaults).
+#
+# These are the baseline rules registered for P2A and P3A in
+# docs/preregistration.md, not tuned values.
+
+strategy: naive
+model: column
+
+naive:
+  tau: 0.10          # minimum after-fee edge per contract at the level taken
+  cap_market: 250    # contracts per market
+  cap_event: 1000    # contracts per event, across its strikes
+
+column:
+  column: p_comp     # probability column already in the observations (the NBM composite)

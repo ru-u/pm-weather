@@ -860,5 +860,69 @@ def p2a_score(
     typer.echo(f"verdict: {r['verdict']}  primary: {r['primary']}")
 
 
+@app.command("plugins")
+def plugins_cmd(
+    params: str = typer.Option(
+        None, help="Params YAML (default: $PMW_PARAMS, else built-in defaults)"
+    ),
+) -> None:
+    """List strategies and probability models (built-in and from installed plugins)."""
+    from pmw import plugins as pl
+
+    src = pl.params_source(params)
+    cfg = pl.load_params(params)
+    typer.echo(json.dumps({**pl.available(), "params": src or "built-in defaults",
+                           "strategy": cfg.get("strategy", "naive"),
+                           "model": cfg.get("model", "column")}, indent=1))  # fmt: skip
+
+
+@app.command("backtest")
+def backtest_cmd(
+    obs: str = typer.Argument(
+        ...,
+        help="Parquet of (market, time) rows: book, mid, model inputs, optional y",
+    ),
+    strategy: str = typer.Option(None, help="Strategy name (default: from params, else naive)"),
+    model: str = typer.Option(
+        None, help="Probability model name (default: from params, else column)"
+    ),
+    params: str = typer.Option(
+        None, help="Params YAML (default: $PMW_PARAMS, else built-in defaults)"
+    ),
+    out: str = typer.Option(
+        None, help="Write the entries (and P&L when y is present) to this parquet"
+    ),
+) -> None:
+    """Paper taker backtest on logged books: model -> strategy -> fee-aware book walk."""
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw import plugins as pl
+    from pmw.backtest.taker import run, settle
+
+    cfg = pl.load_params(params)
+    strat = pl.get_strategy(strategy, cfg)
+    mdl = pl.get_model(model, cfg)
+    frame = pd.read_parquet(obs)
+    frame["p_model"] = mdl.prob_yes(frame)
+    trades = run(frame, strat, "p_model")
+    summary: dict[str, Any] = {
+        "strategy": strat.name, "model": mdl.name, "observations": len(frame),
+        "markets": int(frame["ticker"].nunique()), "entries": len(trades),
+        "contracts": round(float(trades["contracts"].sum()), 2),
+        "cost": round(float(trades["cost"].sum()), 4),
+        "fees": round(float(trades["fees"].sum()), 4),
+    }  # fmt: skip
+    if "y" in frame and len(trades):
+        outcome = dict(zip(frame["ticker"], frame["y"].astype(int), strict=False))
+        trades = settle(trades, outcome)
+        summary["pnl"] = round(float(trades["pnl"].sum()), 4)
+    if out:
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        trades.to_parquet(out)
+    typer.echo(json.dumps(summary, indent=1, default=str))
+
+
 if __name__ == "__main__":
     app()
