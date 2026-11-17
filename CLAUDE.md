@@ -203,8 +203,8 @@ One combined risk layer caps total cold-weather exposure across both.
 Railway, Hobby plan, project `pm-weather`, US East: service `logger` (always
 on), cron service `daily-report`, one-shot service `ercot-jobs` (the only one
 holding ERCOT credentials), bucket `pmw-data`. The $5 monthly credit is
-shared with the owner's other projects (Zenith, uscom-logger): never touch
-those, and keep this project lean. Total account overage is acceptable up to
+shared with the owner's other projects (named in `CLAUDE.local.md`): never
+touch those, and keep this project lean. Total account overage is acceptable up to
 about $10 a month. Deploy with `railway up --service logger` from this folder;
 there is no Railway config file in the repo (see D-023). A redeploy restarts
 the logger and costs at most one 5-minute cycle of order books, so avoid

@@ -9,6 +9,10 @@ keys*.txt
 *.p12
 secrets/
 
+# --- local-only notes: account details and session handoffs (D-043) ---
+CLAUDE.local.md
+docs/handoff.md
+
 # --- data: gitignored, lives in data/ locally and in the Railway bucket ---
 data/
 *.parquet

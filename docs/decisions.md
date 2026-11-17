@@ -142,12 +142,11 @@ spreads 0.10 and 0.30, a monthly-only scope for any GO, and a prospective
 storm-window experiment on live-logged data.
 
 **D-022. Deployed to Railway on 2026-11-14 (owner said "deploy").** New project
-`pm-weather` in the owner's workspace, separate from Zenith and uscom-logger,
+`pm-weather` in the owner's workspace, separate from the owner's other projects,
 which were not touched. Bucket `pmw-data` in US East (`iad`), always-on service
 `logger` and cron service `daily-report` (00:15 UTC), both in US East
 (`us-east4`). Neither service has any `KALSHI_*` or `ERCOT_*` variable. Account
-usage before this project was $3.96 for the billing period (Zenith $2.41,
-uscom-logger $1.55), so the expected total stays under the $10 cap in D-018.
+usage before this project was $3.96 for the billing period, so the expected total stays under the $10 cap in D-018.
 
 **D-023. No Railway config file in the repo.** Railway deprecated
 `railway.toml` (it stops being read on 2026-12-01) in favour of
@@ -327,3 +326,14 @@ outcome joined:
   (no maker fee on these series) earns a reward on top of the spread. That is a
   separate maker strategy, to be designed only after P4E. (4) Programs come and
   go without notice, so the live-inputs job logs `incentive_programs` daily.
+
+**D-043. GitHub repo `ru-u/pm-weather` created private on 2026-11-16, to be
+made public after a tidy pass** (owner: "start private then tidy then public").
+Before the first public push: commit author email rewritten in all history to
+the GitHub noreply address; Railway IDs and the names and spend of the owner's
+other projects moved out of the tracked docs into the gitignored
+`CLAUDE.local.md` (older commits still contain them, accepted as low risk since
+none of it grants access); `docs/handoff.md` untracked and gitignored as a
+session-only file. History was scanned for every value in `.env` and `keys.txt`
+and for key-shaped strings: none found. Supersedes the "local only" note in
+D-017.

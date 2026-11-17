@@ -1,8 +1,8 @@
 # Deployment on Railway
 
 Host: Railway, Hobby plan, project **`pm-weather`**, region **US East**. The $5
-monthly usage credit is shared with the owner's other projects (Zenith and
-uscom-logger). Nothing here touches them. Total account overage is acceptable
+monthly usage credit is shared with the owner's other Railway projects, which
+nothing here touches. Total account overage is acceptable
 up to about $10 a month (D-018).
 
 Status: **deployed 2026-11-14, logger running since 16:12 UTC.**
@@ -21,15 +21,8 @@ Both services build from the repo's `Dockerfile` (auto-detected; core
 dependencies only, no pandas, xarray, cfgrib or herbie). Neither has any
 `KALSHI_*` or `ERCOT_*` variable, and nothing in their code reads one.
 
-IDs, for CLI and API calls:
-
-```
-project      bb5739a5-69f3-4464-a4fb-3d497846e6cc
-environment  5d2760df-896d-4cd4-9f3a-c89ea75ab74e   (production)
-logger       7ff6e882-fd43-43b0-918f-bebca56dd425
-daily-report 135cccf8-082d-45cb-bddc-15632fe985ab
-bucket       92639566-94cc-4b02-976c-12bbd08013c5
-```
+Project, environment, service and bucket IDs are not kept in the repo. They are
+in the gitignored `CLAUDE.local.md`, or `railway status --json` prints them.
 
 ## Environment variables
 
@@ -188,8 +181,8 @@ memory rather than the laptop figure:
 | `daily-report` cron (seconds a day) | under $0.05 |
 | **Total** | **about $1.00 to $1.40 a month** |
 
-Account usage before this project was $3.96 for the billing period ending
-2026-11-16 (Zenith $2.41, uscom-logger $1.55), so the account should land near
+Account usage from the owner's other projects was $3.96 for the billing period
+ending 2026-11-16, so the account should land near
 $5 to $6 a month in total, inside the $10 cap (D-018). Confirm with
 `railway usage projects` after a few days: the memory figure is from half an
 hour and may settle higher.
@@ -198,8 +191,8 @@ hour and may settle higher.
 
 ERCOT calls must run from Railway US (CLAUDE.md rule 8), and ERCOT credentials
 never sit on `logger` or `daily-report`. `ercot-jobs` runs one job per deploy
-and stops (restart policy NEVER, no cron). Service id
-`e30dfead-db48-485e-ad38-103ad056189e`.
+and stops (restart policy NEVER, no cron). Its service id
+is in `CLAUDE.local.md`.
 
 ```bash
 railway add --service ercot-jobs   # with the same five PMW_S3_* references as the logger
@@ -209,7 +202,7 @@ railway scale --service ercot-jobs us-east=1
 #   railway variable set --service ercot-jobs --skip-deploys --stdin ERCOT_API_USERNAME  < (value)
 #   ... ERCOT_API_PASSWORD, ERCOT_PUBLIC_API_SUBSCRIPTION_KEY (primary key only)
 # Pick the job, then deploy:
-railway api "$M" --raw-var s=e30dfead-db48-485e-ad38-103ad056189e --raw-var e=<environment id> \
+railway api "$M" --raw-var s=<ercot-jobs service id> --raw-var e=<environment id> \
   --var 'i={"restartPolicyType":"NEVER","startCommand":"pmw ercot-probe"}'
 railway up --service ercot-jobs --ci
 railway logs --service ercot-jobs -n 50
