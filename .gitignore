@@ -38,3 +38,10 @@ build/
 .vscode/
 .idea/
 *.log
+
+# --- private material never belongs in this repo (D-053) ---
+# fitted or frozen models, private params files, a nested private checkout
+*.pkl
+*.joblib
+params/
+pm-weather-edge/
