@@ -57,6 +57,8 @@ make report         # daily logger report (yesterday UTC)
 make settle-check SERIES=all        # or one series, e.g. KXNYCSNOWM
 make nbm nbs climo  # pull and parse NBM bulletins and station climatology (resumable)
 make p2a            # experiment P2A: observed table, forecasts (no prices), scoring
+make live-snow-inputs   # 2026-27 composite inputs (no prices) into data/interim/live_snow
+make p2as-health    # P2A-S storm-window data health (counts only); scoring waits for 2027-05-15
 uv run pmw plugins                  # strategies and models available, params in use
 uv run pmw backtest OBS.parquet     # paper taker backtest (naive baseline unless a plugin is named)
 make pull-data      # copy the Railway bucket to ./data/bucket (PREFIX=raw/ercot for part)

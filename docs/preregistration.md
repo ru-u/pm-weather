@@ -117,6 +117,42 @@ window markets logged live from 2026-11 onward, once at least 12 storm events in
 at least 8 distinct calendar weeks have settled. Market quotes come from the
 logger's order books instead of hourly candles. Nothing is scored before then.
 
+#### P2A-S implementation clarifications (2026-11-17, before any sample market opened)
+
+Written with the scoring code (`pmw.eval.p2as`), before any storm-window market
+in the sample existed. The only storm event logged so far (KXSNOWCITIES-26NOV15)
+opened before the logger and is outside the sample; it was used only to run the
+pipeline end to end (`--dev`), and no observation survived the quote filter.
+These fix what the paragraph above leaves open; they are not deviations.
+
+1. **Series.** KXSNOWSTORM and KXSNOWCITIES (a newer storm-window series that
+   lists several cities under one event). Everything else in P2A's sample rule
+   applies: station named in the rules and configured, "greater" strikes,
+   settlement reproduced by `pmw.settle.snow`.
+2. **Logged live.** A market is in the sample if it opened at or after the
+   logger's start, 2026-11-14 16:12 UTC, so its whole life is in the books.
+3. **Events.** An event is a Kalshi event ticker; a KXSNOWCITIES event counts
+   once. Its composite is built per station, with P2A's code unchanged.
+4. **Quote.** The latest logged book received at or before the decision time
+   and at most 10 minutes old; no such book means no observation, as a missing
+   candle did. Bid and ask are the best YES bid and 1 minus the best NO bid. The
+   two-sided, spread and sensitivity rules are P2A's.
+5. **Volume for sizing.** Contracts in the logger's trade prints during the hour
+   P2A's candle covered (13:00 to 14:00 UTC for a 14:30 decision).
+6. **Fills.** P2A's sizing rule (clarification 10) sets the cap; the order
+   then walks the logged book level by level while the after-fee edge stays
+   above tau, using the shared `pmw.backtest.taker.walk`. Within an event and
+   decision time, the largest edge at the best level goes first.
+7. **When it is scored.** Once, on or after 2027-05-15, on every sample market
+   settled by then, provided at least 12 events with windows starting in at
+   least 8 distinct ISO weeks have a settled, reproduced market. If the gate is
+   not met, the sample carries over and the same check is made after the next
+   winter (on or after 2028-05-15). The code refuses to score before that
+   (owner decision, D-054).
+8. **Inputs** are rebuilt from the archives after the season
+   (`make live-snow-inputs`), and P2A's leakage check must pass. Blocks, seed,
+   resamples, taus and the decision rule are P2A's.
+
 ### Implementation clarifications (2026-11-15, before any scoring)
 
 Details the frozen text leaves open, fixed while building the pipeline and

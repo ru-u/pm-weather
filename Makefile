@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-all lint format typecheck test check discover log log-test report \
-        settle-check nbm nbs p2a climo pull-data docker-build
+        settle-check nbm nbs p2a climo pull-data docker-build live-snow-inputs p2as-health
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -57,6 +57,22 @@ p2a:  ## Run experiment P2A end to end (needs make nbm nbs climo first)
 	uv run pmw obs-build
 	uv run pmw p2a-forecasts
 	uv run pmw p2a-score
+
+LIVE_SNOW ?= data/interim/live_snow
+LIVE_END ?= $(shell date -u +%F)
+
+live-snow-inputs:  ## Winter 2026-27 composite inputs into $(LIVE_SNOW) (no prices); `LIVE_END=2027-04-30`
+	mkdir -p $(LIVE_SNOW)/obs $(LIVE_SNOW)/nbm $(LIVE_SNOW)/climo
+	uv run pmw nbm-pull 2026-11-01 $(LIVE_END)
+	uv run pmw nbm-parse 2026-11-01 $(LIVE_END) --out $(LIVE_SNOW)/nbm/nbp_periods.parquet
+	uv run pmw nbm-pull 2026-11-01 $(LIVE_END) --product nbs
+	uv run pmw nbs-parse 2026-11-01 $(LIVE_END) --out $(LIVE_SNOW)/nbm/nbs_s06.parquet
+	uv run pmw climo-pull --end $(LIVE_END) --out $(LIVE_SNOW)/climo/daily_snow.parquet
+	uv run pmw obs-build --all-stations --first-year 2026 --last-year 2027 \
+		--climo $(LIVE_SNOW)/climo/daily_snow.parquet --out $(LIVE_SNOW)/obs/daily_snow.parquet
+
+p2as-health:  ## P2A-S data health (counts only); pull live/kalshi/market_meta and orderbooks first
+	uv run pmw p2as-health
 
 climo:  ## Pull 35 years of daily snowfall per station for climatology
 	uv run pmw climo-pull

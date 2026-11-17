@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -314,7 +315,10 @@ def score_all(
     outcomes: dict[str, int],
     window_end: dict[str, datetime],
     n_boot: int = N_BOOT,
+    simulate: Callable[..., pd.DataFrame] | None = None,
 ) -> dict[str, Any]:
+    """`simulate` replaces the candle taker (P2A-S fills from logged books)."""
+    simulate = simulate or simulate_taker
     obs = assemble(forecasts, quotes, outcomes, window_end)
     y = obs["y"].to_numpy(float)
     primary = brier_difference(obs, "p_nbm", n_boot)
@@ -322,7 +326,7 @@ def score_all(
         brier_difference(assemble(forecasts, quotes, outcomes, window_end, s), "p_nbm", n_boot)
         for s in SENSITIVITY_SPREADS
     ]
-    trades = {tau: simulate_taker(obs, tau) for tau in TAUS}
+    trades = {tau: simulate(obs, tau) for tau in TAUS}
     summaries = {tau: taker_summary(obs, tr, n_boot) for tau, tr in trades.items()}
     verdict = decide(primary, summaries[PRIMARY_TAU].get("share_resamples_positive", 0.0), sens)
     out: dict[str, Any] = {

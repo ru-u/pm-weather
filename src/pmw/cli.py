@@ -860,6 +860,138 @@ def p2a_score(
     typer.echo(f"verdict: {r['verdict']}  primary: {r['primary']}")
 
 
+LIVE_META_GLOB = "data/bucket/live/kalshi/market_meta/*/*.parquet"
+LIVE_BOOKS_GLOB = "data/bucket/live/kalshi/orderbooks/*/*.parquet"
+LIVE_TRADES_GLOB = "data/bucket/live/kalshi/trades/*/*.parquet"
+
+
+def _p2as_sample(meta_glob: str, dev: bool = False):  # type: ignore[no-untyped-def]
+    import duckdb
+
+    from pmw.eval import p2as
+    from pmw.utils.config import load_stations_config
+
+    meta = duckdb.execute(f"select * from read_parquet('{meta_glob}')").df()
+    return p2as.sample_from_meta(meta, load_stations_config(), dev=dev)
+
+
+def _live_rows(glob: str, tickers: set[str]):  # type: ignore[no-untyped-def]
+    import duckdb
+    import pandas as pd
+
+    if not tickers:
+        return pd.DataFrame()
+    try:
+        names = ",".join(f"'{t}'" for t in sorted(tickers))
+        return duckdb.execute(
+            f"select * from read_parquet('{glob}') where ticker in ({names})"
+        ).df()
+    except duckdb.IOException:
+        return pd.DataFrame()
+
+
+@app.command("p2as-health")
+def p2as_health(
+    meta_glob: str = typer.Option(LIVE_META_GLOB),
+    books_glob: str = typer.Option(LIVE_BOOKS_GLOB),
+) -> None:
+    """P2A-S data health: counts only; no price is joined to a forecast or an outcome."""
+    from pmw.eval import p2as
+
+    _setup_logging()
+    events, excluded = _p2as_sample(meta_glob)
+    books = _live_rows(books_glob, {m.ticker for e in events for m in e.markets})
+    books = books[["ticker", "received_at_utc"]] if len(books) else books
+    typer.echo(json.dumps(p2as.health(events, excluded, books), indent=1, default=str))
+
+
+@app.command("p2as-forecasts")
+def p2as_forecasts(
+    dev: bool = typer.Option(False, help="Markets that opened before the logger (development)"),
+    meta_glob: str = typer.Option(LIVE_META_GLOB),
+    root: str = typer.Option("data/interim/live_snow", help="Inputs from `make live-snow-inputs`"),
+) -> None:
+    """P2A-S stage 1: the P2A composite at every decision time. No prices, no outcomes."""
+    from pathlib import Path
+
+    from pmw.eval.p2a import build_forecasts, leakage_violations
+
+    _setup_logging()
+    events, _ = _p2as_sample(meta_glob, dev)
+    base = Path(root)
+    out = Path(f"data/processed/p2as/forecasts{'_dev' if dev else ''}.parquet")
+    stats = build_forecasts(
+        events,
+        nbp_path=base / "nbm/nbp_periods.parquet",
+        nbs_path=base / "nbm/nbs_s06.parquet",
+        obs_path=base / "obs/daily_snow.parquet",
+        climo_path=base / "climo/daily_snow.parquet",
+        out=out,
+    )
+    typer.echo(f"wrote {out}: {stats}")
+    leaks = leakage_violations(out)
+    typer.echo(f"leakage check: {leaks}")
+    if leaks["forecast_not_yet_public"] or leaks["observation_not_yet_public"]:
+        raise typer.Exit(1)
+
+
+@app.command("p2as-score")
+def p2as_score(
+    dev: bool = typer.Option(False, help="Markets that opened before the logger (development)"),
+    meta_glob: str = typer.Option(LIVE_META_GLOB),
+    books_glob: str = typer.Option(LIVE_BOOKS_GLOB),
+    trades_glob: str = typer.Option(LIVE_TRADES_GLOB),
+) -> None:
+    """P2A-S stage 2: scored once, on or after 2027-05-15 with 12 events in 8 weeks."""
+    from pathlib import Path
+
+    import pandas as pd
+
+    from pmw.eval import p2as
+    from pmw.markets.kalshi import KalshiPublic
+    from pmw.settle.snow import check_series
+    from pmw.utils.config import load_logger_config, load_stations_config
+    from pmw.weather.acis import Acis
+    from pmw.weather.iem_cli import IemCli
+
+    _setup_logging()
+    events, excluded = _p2as_sample(meta_glob, dev)
+    tickers = {m.ticker for e in events for m in e.markets}
+    checks = []
+    client = KalshiPublic(load_logger_config().kalshi.base_url, min_request_interval_s=0.5)
+    try:
+        for series in sorted({e.series for e in events}):
+            ms = [m for m in client.settled_markets(series) if m["ticker"] in tickers]
+            checks += check_series(client, IemCli(), series, load_stations_config(),
+                                   acis=Acis(), markets=ms)  # fmt: skip
+    finally:
+        client.close()
+    outcomes, unreproduced = p2as.outcomes_from_checks(checks)
+    coverage = p2as.settled_coverage(events, outcomes)
+    p2as.guard(coverage, dev)
+    tag = "_dev" if dev else ""
+    f = pd.read_parquet(f"data/processed/p2as/forecasts{tag}.parquet")
+    quotes = p2as.quotes_from_books(
+        f, _live_rows(books_glob, tickers), _live_rows(trades_glob, tickers)
+    )
+    result: dict[str, Any] = p2as.score(f, quotes, outcomes, p2as.window_ends(events))
+    if "_trades" in result:
+        result.pop("_trades").to_parquet(f"data/processed/p2as/trades{tag}.parquet")
+        result.pop("_obs")
+    result.update({"coverage": coverage, "unreproduced": unreproduced, "dev": dev,
+                   "excluded": {x.ticker: x.reason for x in excluded},
+                   "quotes": len(quotes)})  # fmt: skip
+    Path(f"data/processed/p2as/result{tag}.json").write_text(
+        json.dumps(result, indent=1, default=str)
+    )
+    typer.echo(
+        json.dumps(
+            {k: result.get(k) for k in ("verdict", "primary", "quote_counts", "coverage", "dev")},
+            default=str,
+        )
+    )
+
+
 @app.command("plugins")
 def plugins_cmd(
     params: str = typer.Option(

@@ -441,3 +441,23 @@ deployed from the private repository only; the logger services stay on this one.
 Published history was not rewritten: a secrets scan of all 71 commits (gitleaks
 and a check of every value in `.env` and `keys.txt`) found nothing, and the
 commits that held the private material had never been pushed.
+
+**D-054. P2A-S scoring code, and when P2A-S is scored (2026-11-17, owner
+decision on timing).** P2A-S, registered with P2A, is now implemented in
+`pmw.eval.p2as` and reuses P2A's composite, observation set, Brier difference,
+taker summary and decision rule unchanged. Only the quote source is new: logged
+books (latest at or before the decision time, at most 10 minutes old), logged
+trade volume for sizing, and fills by walking the book. P2A's `score_all` gained
+an optional `simulate` argument for this; P2A's own path is untouched and its
+known-answer tests still pass. The registered text says P2A-S is scored "once at
+least 12 storm events in at least 8 calendar weeks have settled". The owner chose
+to score it once at the end of the season, on or after 2027-05-15 (the same date
+as P4S-paper), on every sample market settled by then. If the gate is not met by
+then, the sample carries over to the next winter. The alternative was to score
+as soon as the gate was crossed, on a smaller sample. The other clarifications
+(series, which markets count as logged live, events, quotes, volume, fills) are
+in `docs/preregistration.md` under P2A-S. All were written before any sample
+market opened. Tested on synthetic books (GO and NO GO known answers; same D as
+P2A when the books match the candles) and run end to end with `--dev` on
+KXSNOWCITIES-26NOV15, which is outside the sample: 100 forecast rows, no leakage,
+30 with a logged book, none two-sided.
