@@ -492,3 +492,26 @@ fill's `fee_cost` includes the rounding fee. The first demo fills are
 reconciled against `pmw.markets.fees` (trade fee and trade-plus-rounding fee
 both compared) before any paper P&L is trusted to the cent. Demo credentials are
 separate from production ones and live only in the private repository's `.env`.
+
+**D-057. Live trading approved for smoke tests only (2026-11-18, owner
+decision).** I approve testing the trading service (D-056) on the real
+exchange. Scope: `pmwe trade-smoke` only. That means one post-only bid for 1
+contract at the lowest price (listed, then canceled), a kill-switch check that
+sends nothing, and one immediate-or-cancel order for 1 contract at the best ask,
+reconciled against `pmw.markets.fees`. Limits: 1 contract per order and per
+market, at most $5 at risk, 10 orders a day, only the series under test. No
+strategy orders; the ERCOT pilot needs its own registered rules and approval.
+Written into this file by Claude Code on the owner's explicit instruction in
+session ("yea go on", 2026-11-18).
+
+**D-058. Smoke test on the real exchange passed (2026-11-19).** Run under D-057
+on `KXTXERCOTPEAKD-26NOV19-T56500`. A post-only bid for 1 contract at $0.01 was
+accepted, listed and canceled (`reduced_by` 1.00). With the kill switch engaged,
+the executor sent no order. An immediate-or-cancel buy of 1 YES at the $0.70 ask
+filled in full at $0.70. Kalshi charged a fee of $0.014700, equal to
+`pmw.markets.fees` to the cent (0.07 x 0.70 x 0.30, no rounding up), and cash
+moved by exactly $0.7147. That answers the open question in D-056: on this fill
+`fee_cost` is the trade fee, and the rounding fee was zero. The paper book walk's
+taker fees are therefore right. Maker fees are still unchecked. The position
+(1 contract) is held to settlement. No further real orders are covered by D-057
+beyond reruns of the same smoke test.

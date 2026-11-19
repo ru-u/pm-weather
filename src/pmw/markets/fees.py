@@ -13,10 +13,12 @@ Sources (checked 2026-11-14), see docs/data_sources.md:
     exactly. That is the published General Trading Fees formula
     fee = 0.07 * C * P * (1 - P).
 
-Not verified from the fee-schedule PDF itself: kalshi.com rate-limited every
-automated fetch of https://kalshi.com/docs/kalshi-fee-schedule.pdf. Until that
-PDF has been read by a human and one real fill has been reconciled, treat
-MAKER_FRACTION as "per API docs" rather than "per fee schedule".
+Reconciled against a real fill on 2026-11-19 (D-057): 1 YES at $0.70 on
+KXTXERCOTPEAKD, taker. Kalshi's fill `fee_cost` was $0.014700, equal to
+`fill_fee(0.70, 1).trade_fee` (0.07 x 0.70 x 0.30, not rounded up to the cent),
+and cash moved by exactly $0.7147. Maker fees (MAKER_FRACTION) are still "per
+API docs": the fee-schedule PDF could not be fetched automatically and no maker
+fill has been reconciled.
 
 Everything here is exact Decimal arithmetic. Prices are dollars per contract.
 """

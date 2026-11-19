@@ -142,9 +142,9 @@ one and plugs in through the `pmw.strategies` / `pmw.models` entry points.
   weather and energy series we track are `quadratic`, multiplier 1, no maker fee.
 - The owner's Kalshi key is Ed25519 (PKCS#8 body stored without PEM header
   lines). Ed25519 signs the pre-sign text directly; RSA-PSS applies to RSA keys only.
-- The fee-schedule PDF itself could not be fetched (kalshi.com rate-limits
-  automated requests). The 0.07 was confirmed from the API docs' worked example.
-  Reconcile against the first real fill.
+- The 0.07 was confirmed from the API docs' worked example and then on a real
+  fill (2026-11-19, D-057): 1 YES at $0.70, `fee_cost` $0.0147 exactly as
+  `pmw.markets.fees` computes it (no cent rounding). Maker fees are unchecked.
 
 **Settlement**
 - Snow contracts (rulebook SNOWOVERTIME): source hierarchy is The Weather
