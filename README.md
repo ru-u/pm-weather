@@ -11,12 +11,14 @@ those probabilities with market prices using pre-registered tests, proper
 scoring rules and block-bootstrap intervals. Trades are simulated against the
 quoted side of the logged book after the exchange's fee.
 
-Status (2026-11-17): the logger has run since 2026-11-14. Five pre-registered
+Status (2026-11-20): the logger has run since 2026-11-14. Five pre-registered
 experiments have run. In both direct tests of a free public forecast against
 the market, the market was more accurate. A frozen ERCOT nowcast came close to
-the market but did not beat it. A snow nowcast beat the free baseline on a
-held-out winter and is now being tested on live order books through April
-2027. No orders have been placed.
+the market but did not beat it, and is now being paper traded and tested on
+live order books through September 2027. A snow nowcast beat the free baseline
+on a held-out winter and is being tested on live order books through April
+2027. The only real orders so far are a 1-contract smoke test of the order and
+fee code on 2026-11-19 (D-058); no strategy trades live.
 
 ## Why these markets
 
